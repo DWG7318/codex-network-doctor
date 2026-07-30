@@ -1,0 +1,29 @@
+name: Collector request
+description: Propose a new evidence source.
+title: "[collector] "
+labels:
+  - collector
+body:
+  - type: input
+    attributes:
+      label: Stable ID and category
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Evidence source and exact read operation
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Mode
+      options:
+        - Passive
+        - Active
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Privilege, privacy, timeout, and performance impact
+    validations:
+      required: true

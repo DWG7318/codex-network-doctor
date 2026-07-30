@@ -1,0 +1,12 @@
+/.tools/
+/tools/osquery-*/
+/bin/
+/dist/
+/out/
+/release/
+*.test
+*.exe
+*.zip
+*.log
+!testdata/*.zip
+!samples/*.zip

@@ -1,0 +1,44 @@
+CND v2rayN TUN 网络修复器
+==========================
+
+适用情况
+--------
+微信等直连软件可以联网，但浏览器和 Codex 无法访问；v2rayN 日志出现
+external controller listen error、bind 或 TUN 无法保持开启。
+
+使用方法
+--------
+1. 启动 v2rayN，选择一个可用节点。
+2. 双击“cnd网络修复.exe”，接受 Windows UAC 管理员权限提示。
+3. 程序会备份 v2rayN 配置、开启 TUN、清理重复 v2rayN/遗留内核并重启。
+4. 如果派生控制端口落入 Windows excluded port range，程序会自动迁移到连续
+   32 个安全高位端口。
+5. 看到“修复成功”和 singbox_tun 已启动后，重新打开浏览器和 Codex。
+
+程序是可直接双击的原生 EXE，操作者不需要打开 PowerShell。
+
+离线案例库
+----------
+cnd.exe cases
+cnd.exe case CND-CASE-2026-001
+cnd网络修复.exe cases
+cnd网络修复.exe case CND-CASE-2026-001
+
+案例库编译进 EXE，不联网也能查阅完整脱敏处置日志。
+
+撤销方法
+--------
+双击“cnd网络修复-撤销.exe”，恢复最近一次修复前的 v2rayN TUN 配置并重启。
+
+安全边界
+--------
+- 可识别 v2rayN2.exe 等数字改名实例。
+- 只停止 v2rayN GUI 和其安装目录内的已知代理内核。
+- 未知端口占用者只报告、绝不终止。
+- 修改 guiNConfig.json 前先保存可校验的回滚备份。
+- 不修改节点、路由、DNS 服务器或 Windows 系统代理。
+- 不执行 Winsock/TCP-IP 重置。
+
+备份目录
+--------
+%LOCALAPPDATA%\CND\tun-repair\backups

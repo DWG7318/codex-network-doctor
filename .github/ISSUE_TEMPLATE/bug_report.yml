@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible CND defect without attaching real evidence.
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    attributes:
+      label: Reproduction
+      description: Provide minimal steps and synthetic data only.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Windows and Provider
+      placeholder: Windows 11 24H2, osquery 5.23.1
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Data safety
+      options:
+        - label: I have not attached a real Evidence ZIP or secrets.
+          required: true

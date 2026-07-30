@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/timeline.schema.json",
+  "title": "Codex Network Doctor Timeline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_time",
+          "source_artifact",
+          "source_kind"
+        ],
+        "properties": {
+          "source_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "record_id": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

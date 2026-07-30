@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/collector-catalog.schema.json",
+  "title": "Codex Network Doctor Collector Catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "provider",
+    "collectors"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "provider": {
+      "enum": [
+        "osquery",
+        "windows-powershell",
+        "synthetic",
+        "test"
+      ]
+    },
+    "collectors": {
+      "type": [
+        "array",
+        "object",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "description",
+          "timeout_ms",
+          "privilege",
+          "mode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "privilege": {
+            "type": "string"
+          },
+          "mode": {
+            "const": "passive"
+          },
+          "sql": {
+            "type": "string",
+            "pattern": "^SELECT "
+          },
+          "script": {
+            "type": "string"
+          },
+          "media_type": {
+            "type": "string"
+          },
+          "extension": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

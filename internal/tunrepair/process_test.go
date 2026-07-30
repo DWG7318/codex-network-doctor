@@ -1,6 +1,7 @@
 package tunrepair
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -72,10 +73,16 @@ func TestPlanTerminationNeverIncludesUnknownPortOwner(t *testing.T) {
 func TestPlanTerminationIncludesOrphanCoreOnlyInsideV2RayNInstallation(t *testing.T) {
 	t.Parallel()
 
+	v2rayNRoot := filepath.Join(string(filepath.Separator), "v2rayN")
+	otherRoot := filepath.Join(string(filepath.Separator), "Other")
 	processes := []Process{
-		{PID: 20, Name: "v2rayN2.exe", Path: `C:\v2rayN\v2rayN2.exe`},
-		{PID: 30, Name: "sing-box.exe", Path: `C:\v2rayN\bin\sing_box\sing-box.exe`},
-		{PID: 31, Name: "sing-box.exe", Path: `C:\Other\sing-box.exe`},
+		{PID: 20, Name: "v2rayN2.exe", Path: filepath.Join(v2rayNRoot, "v2rayN2.exe")},
+		{
+			PID:  30,
+			Name: "sing-box.exe",
+			Path: filepath.Join(v2rayNRoot, "bin", "sing_box", "sing-box.exe"),
+		},
+		{PID: 31, Name: "sing-box.exe", Path: filepath.Join(otherRoot, "sing-box.exe")},
 	}
 
 	plan := PlanTermination(processes, nil, processes[0], nil)

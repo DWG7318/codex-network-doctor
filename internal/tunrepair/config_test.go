@@ -2,6 +2,7 @@ package tunrepair
 
 import (
 	"bytes"
+	"path/filepath"
 	"testing"
 )
 
@@ -58,13 +59,21 @@ func TestEnableTunConfigRejectsMissingOrMalformedSetting(t *testing.T) {
 func TestCandidateConfigPathsCoverPortableAndLocalAppDataLayouts(t *testing.T) {
 	t.Parallel()
 
+	portableRoot := filepath.Join(string(filepath.Separator), "v2rayN-windows-64")
+	localAppData := filepath.Join(
+		string(filepath.Separator),
+		"Users",
+		"ExampleUser",
+		"AppData",
+		"Local",
+	)
 	got := CandidateConfigPaths(
-		`C:\v2rayN-windows-64\v2rayN2.exe`,
-		`C:\Users\ExampleUser\AppData\Local`,
+		filepath.Join(portableRoot, "v2rayN2.exe"),
+		localAppData,
 	)
 	want := []string{
-		`C:\v2rayN-windows-64\guiConfigs\guiNConfig.json`,
-		`C:\Users\ExampleUser\AppData\Local\v2rayN\guiConfigs\guiNConfig.json`,
+		filepath.Join(portableRoot, "guiConfigs", "guiNConfig.json"),
+		filepath.Join(localAppData, "v2rayN", "guiConfigs", "guiNConfig.json"),
 	}
 	if len(got) != len(want) {
 		t.Fatalf("CandidateConfigPaths() = %#v, want %#v", got, want)

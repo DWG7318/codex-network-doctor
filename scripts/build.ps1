@@ -65,11 +65,13 @@ try {
     }
     $repairExecutable = Join-Path $OutputDirectory 'cnd网络修复.exe'
     $rollbackExecutable = Join-Path $OutputDirectory 'cnd网络修复-撤销.exe'
+    $speedExecutable = Join-Path $OutputDirectory 'cnd网速检测.exe'
     & $go build -trimpath -ldflags "-s -w -X main.version=$Version" -o $repairExecutable .\cmd\cnd-repair
     if ($LASTEXITCODE -ne 0) {
         throw 'go build cnd-repair failed'
     }
     Copy-Item -LiteralPath $repairExecutable -Destination $rollbackExecutable -Force
+    Copy-Item -LiteralPath $repairExecutable -Destination $speedExecutable -Force
 }
 finally {
     Pop-Location
@@ -78,3 +80,4 @@ finally {
 Write-Output (Join-Path $OutputDirectory 'cnd.exe')
 Write-Output (Join-Path $OutputDirectory 'cnd网络修复.exe')
 Write-Output (Join-Path $OutputDirectory 'cnd网络修复-撤销.exe')
+Write-Output (Join-Path $OutputDirectory 'cnd网速检测.exe')

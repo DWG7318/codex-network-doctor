@@ -5,6 +5,9 @@ Codex Network Doctor 的 `cnd.exe` 是一个 Windows 网络证据采集器。它
 项目另外提供显式运行、范围受限的 `cnd网络修复.exe`，用于修复 v2rayN 重复实例、
 遗留内核或 Windows 排除端口范围造成的控制端口冲突，并确保 TUN 启用。两个程序职责独立。
 
+`cnd网速检测.exe` 提供显式、只读的分层测速，区分系统/TUN、HTTP 代理和 SOCKS5 代理入口，
+帮助判断瓶颈位于本地入口还是入口汇合后的远端链路。它不请求管理员权限，也不修改或重启 v2rayN。
+
 当前交付是 MasterSpec 路线中的 **v4 Evidence Engine CLI**：
 
 - osquery 5.23.1 适配器：13 个被动查询，适合结构化采集。
@@ -54,6 +57,33 @@ PowerShell 只是 CND 在后台调用的 Windows 状态读取接口，操作者�
 ```
 
 双击 `cnd网络修复-撤销.exe` 可以恢复最近一次修复前的 v2rayN TUN 配置并重新启动原实例。
+
+## 双击网速分层检测
+
+保持 v2rayN 节点和 TUN 状态不变，双击：
+
+```text
+cnd网速检测.exe
+```
+
+也可以从终端显式运行：
+
+```powershell
+.\cnd网络修复.exe speed
+```
+
+工具自动发现 v2rayN/sing-box 的本地 mixed 端口，按“系统/TUN → HTTP → SOCKS5”顺序执行
+三轮 1 MB 测速。结果显示每个样本的 HTTP 状态、字节数、TTFB、总耗时和 Mbps，并输出稳定代码：
+
+- `TUN_PATH_SLOW`：TUN/系统入口持续慢于同出口 SOCKS5。
+- `TUN_PATH_UNRELIABLE`：TUN/系统入口三次中至少失败两次，而 SOCKS5 三次成功。
+- `HTTP_PROXY_PATH_SLOW`：HTTP CONNECT 入口持续慢于 SOCKS5。
+- `HTTP_PROXY_PATH_UNRELIABLE`：HTTP入口三次中至少失败两次，而 SOCKS5 三次成功。
+- `SHARED_REMOTE_PATH_UNSTABLE`：TUN和 SOCKS5 同时大幅波动，问题范围在入口汇合之后。
+- `INSUFFICIENT_EVIDENCE`：成功样本不足，不强行下结论。
+
+主动测速全程串行、单项有硬超时；不会切换 TUN、修改 DNS/路由/系统代理、停止或重启进程。
+详细合同见 [RFC 0002](docs/RFC/0002-active-speed-path-diagnostics.md)。
 
 修复器不会终止占用控制端口的未知程序，也不修改节点、路由、DNS 服务器或 Windows 系统代理，不执行 Winsock/TCP-IP 重置。v2rayN 7.19.5 会按完整 EXE 路径做单实例判断，因此同目录的 `v2rayN.exe` 与 `v2rayN2.exe` 能同时运行；修复器专门消除这一竞争。实现依据见 v2rayN 官方的 [启动代码](https://github.com/2dust/v2rayN/blob/7.19.5/v2rayN/v2rayN.Desktop/Program.cs)、[运行时端口代码](https://github.com/2dust/v2rayN/blob/7.19.5/v2rayN/ServiceLib/Manager/AppManager.cs) 和 [sing-box TUN 配置](https://github.com/2dust/v2rayN/blob/7.19.5/v2rayN/ServiceLib/Services/CoreConfig/Singbox/SingboxInboundService.cs)。
 

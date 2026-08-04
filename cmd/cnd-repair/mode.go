@@ -12,12 +12,17 @@ const (
 	modeRepair   operationMode = "repair"
 	modeRollback operationMode = "rollback"
 	modeInspect  operationMode = "inspect"
+	modeSpeed    operationMode = "speed"
 )
 
 func resolveMode(args []string, executableName string) (operationMode, error) {
 	if len(args) == 0 {
-		if strings.Contains(strings.ToLower(filepath.Base(executableName)), "撤销") {
+		baseName := strings.ToLower(filepath.Base(executableName))
+		if strings.Contains(baseName, "撤销") {
 			return modeRollback, nil
+		}
+		if strings.Contains(baseName, "网速检测") || strings.Contains(baseName, "speed") {
+			return modeSpeed, nil
 		}
 		return modeRepair, nil
 	}
@@ -31,6 +36,8 @@ func resolveMode(args []string, executableName string) (operationMode, error) {
 		return modeRollback, nil
 	case "inspect":
 		return modeInspect, nil
+	case "speed", "speed-test":
+		return modeSpeed, nil
 	default:
 		return "", fmt.Errorf("unknown operation %q", args[0])
 	}

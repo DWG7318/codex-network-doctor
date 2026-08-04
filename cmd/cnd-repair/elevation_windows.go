@@ -5,7 +5,7 @@ package main
 import "github.com/dwg7318/codex-network-doctor/internal/tunrepair"
 
 func ensurePlatformElevation(mode operationMode) (bool, error) {
-	if mode == modeInspect {
+	if mode == modeInspect || mode == modeSpeed {
 		return false, nil
 	}
 	if tunrepair.IsElevated() {

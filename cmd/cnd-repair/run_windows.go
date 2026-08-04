@@ -6,13 +6,19 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"time"
 
+	"github.com/dwg7318/codex-network-doctor/internal/proxyrepair"
+	"github.com/dwg7318/codex-network-doctor/internal/speedtest"
 	"github.com/dwg7318/codex-network-doctor/internal/tunrepair"
 )
 
 func runPlatform(ctx context.Context, mode operationMode, output, errorOutput io.Writer) int {
+	if mode == modeSpeed {
+		return runSpeedDiagnostics(ctx, output, errorOutput)
+	}
 	host, err := tunrepair.NewWindowsHost("")
 	if err != nil {
 		_, _ = fmt.Fprintf(errorOutput, "初始化失败：%v\n", err)
@@ -67,6 +73,63 @@ func runPlatform(ctx context.Context, mode operationMode, output, errorOutput io
 		_, _ = fmt.Fprintf(errorOutput, "不支持的操作：%s\n", mode)
 		return 2
 	}
+}
+
+func runSpeedDiagnostics(ctx context.Context, output, errorOutput io.Writer) int {
+	host, err := proxyrepair.NewWindowsHost("")
+	if err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "初始化只读代理发现失败：%v\n", err)
+		return 1
+	}
+	defer func() { _ = host.Close() }()
+	currentProxy, err := host.CurrentProxy()
+	if err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "读取系统代理失败：%v\n", err)
+		return 1
+	}
+	candidates, err := host.DiscoverCandidates(ctx)
+	if err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "发现本地代理端口失败：%v\n", err)
+		return 1
+	}
+	ranked := proxyrepair.RankCandidates(candidates, currentProxy)
+	if len(ranked) == 0 {
+		_, _ = fmt.Fprintln(errorOutput, "未发现 v2rayN/sing-box 本地代理监听端口。")
+		return 1
+	}
+	selected, err := selectSpeedCandidate(ctx, ranked, host.Probe)
+	if err != nil {
+		_, _ = fmt.Fprintf(errorOutput, "未发现可用的本地 HTTP/mixed 代理端口：%v\n", err)
+		return 1
+	}
+	endpoint := net.JoinHostPort(selected.Host, fmt.Sprintf("%d", selected.Port))
+	_, _ = fmt.Fprintln(output, "主动测速已显式启用；不会修改代理、TUN、DNS、路由或进程。")
+	_, _ = fmt.Fprintf(output, "本地 mixed 候选：%s（%s，PID %d）\n", endpoint, selected.ProcessName, selected.PID)
+	_, _ = fmt.Fprintln(output, "system_path 在 TUN 开启时代表 TUN 路径，关闭时代表直接系统路径。")
+
+	runContext, cancel := context.WithTimeout(ctx, 4*time.Minute)
+	defer cancel()
+	report := runSpeedPlan(
+		runContext,
+		speedPlan{
+			Endpoint:  endpoint,
+			TargetURL: "https://speed.cloudflare.com/__down?bytes=1000000",
+			Attempts:  3,
+			Timeout:   25 * time.Second,
+			Delay:     250 * time.Millisecond,
+		},
+		speedtest.Measure,
+		output,
+	)
+	successes := 0
+	for _, summary := range report.Summaries {
+		successes += summary.SuccessfulSamples
+	}
+	if successes == 0 {
+		_, _ = fmt.Fprintln(errorOutput, "全部测速路径失败；请检查节点连通性后重试。")
+		return 1
+	}
+	return 0
 }
 
 func inspectTun(host *tunrepair.WindowsHost, output, errorOutput io.Writer) int {

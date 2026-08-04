@@ -35,7 +35,11 @@ func main() {
 		return
 	}
 
-	_, _ = fmt.Fprintf(os.Stdout, "CND v2rayN TUN 网络修复器 %s\n", version)
+	title := "CND v2rayN TUN 网络修复器"
+	if mode == modeSpeed {
+		title = "CND 网络路径测速工具"
+	}
+	_, _ = fmt.Fprintf(os.Stdout, "%s %s\n", title, version)
 	exitCode := runPlatform(context.Background(), mode, os.Stdout, os.Stderr)
 	pauseIfInteractive()
 	os.Exit(exitCode)

@@ -47,6 +47,32 @@ func TestResolveModeSupportsExplicitInspect(t *testing.T) {
 	}
 }
 
+func TestResolveModeSupportsExplicitSpeed(t *testing.T) {
+	t.Parallel()
+
+	mode, err := resolveMode([]string{"speed"}, "cnd网络修复.exe")
+
+	if err != nil {
+		t.Fatalf("resolveMode returned error: %v", err)
+	}
+	if mode != modeSpeed {
+		t.Fatalf("mode = %q, want speed", mode)
+	}
+}
+
+func TestResolveModeDefaultsSpeedExecutableToReadOnlySpeedMode(t *testing.T) {
+	t.Parallel()
+
+	mode, err := resolveMode(nil, "cnd网速检测.exe")
+
+	if err != nil {
+		t.Fatalf("resolveMode returned error: %v", err)
+	}
+	if mode != modeSpeed {
+		t.Fatalf("mode = %q, want speed", mode)
+	}
+}
+
 func TestRunCaseCommandDoesNotRequireRepairMode(t *testing.T) {
 	t.Parallel()
 

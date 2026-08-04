@@ -24,6 +24,12 @@ $go = ".\.tools\go\bin\go.exe" # 或 PATH 中的 go
 - PowerShell 目录不得含主动或变更命令。
 - 证书采集不得依赖 `Cert:` PSDrive，必须只读打开 X509Store。
 - 引导脚本固定 osquery 版本和 SHA-256，且不得安装服务。
+- 分层测速必须按系统/TUN、HTTP、SOCKS5 串行配对，不得并发压测。
+- 比较性判断必须至少使用每条路径三个成功样本；样本不足输出 `INSUFFICIENT_EVIDENCE`。
+- 三次配对中某入口失败至少两次、SOCKS5 三次成功时，必须输出对应 `*_PATH_UNRELIABLE`，
+  不得把已完成的三次失败证据误报为样本不足。
+- SOCKS5 测试必须把目标域名交给代理解析，且不得读取或输出节点凭据。
+- `cnd网速检测.exe` 默认进入只读测速模式，不得因文件名解析错误进入修复模式或触发 UAC。
 
 ## Windows smoke tests
 

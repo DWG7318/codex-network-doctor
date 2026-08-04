@@ -1,6 +1,6 @@
 # Codex Network Doctor MasterSpec
 
-版本：1.1
+版本：1.2
 状态：唯一权威设计文档
 适用交付：v4 Evidence Engine CLI
 
@@ -8,11 +8,15 @@
 
 构建一个企业级 Windows 网络证据采集平台。工具负责采集、封装和验证证据；人或外部分析系统负责解释证据。
 
-CND 不执行：
+CND 的被动证据采集器 `cnd.exe` 不执行：
 
 - 网络、代理、防火墙、DNS、路由或服务修复。
-- 主动 TLS、HTTP、WebSocket、DNS 或端口探测，除非未来由操作者显式选择主动配置。
+- 主动 TLS、HTTP、WebSocket、DNS 或端口探测。
 - Diagnosis、Root Cause、Probability、Recommendation 或 AI Guess。
+
+独立交付的 `cnd网速检测.exe` / `cnd网络修复.exe speed` 允许操作者显式启动有界主动测速和
+规则化的组件范围判断。它不属于 Evidence ZIP 采集目录，不改变 `cnd.exe` 的被动边界；合同见
+[RFC 0002](RFC/0002-active-speed-path-diagnostics.md)。
 
 ## 2. 规范性原则
 
@@ -26,6 +30,8 @@ CND 不执行：
 8. **Chain of custody**：除 `manifest.json` 自身外，每个普通文件必须记录大小、媒体类型和 SHA-256。
 9. **No silent overwrite**：证据文件不可重写，输出 ZIP 默认不可覆盖。
 10. **Sensitive by construction**：所有 Evidence ZIP 均按敏感材料处理。
+11. **Explicit active diagnostics**：主动测速只存在于独立诊断/修复工具，必须由操作者显式运行，
+    且不得修改 TUN、DNS、路由、系统代理或进程状态。
 
 ## 3. 信任和边界
 
@@ -110,6 +116,7 @@ cnd validate（两份冒烟 ZIP）
 ## 8. Roadmap
 
 - **v4（当前）**：CLI、Evidence Store、Manifest、确定性 ZIP、Validation、osquery 与 PowerShell 基线。
+- **独立运维工具**：显式 v2rayN TUN 修复、撤销和有界网络路径测速；不得改变 Evidence Engine 合同。
 - **v4.1**：原生 Windows API Collector、签名侧车文件、可配置隐私策略。
 - **v4.2**：GUI；GUI 只能编排相同 Collector 合同，不复制采集逻辑。
 - **v5**：带签名目录和兼容性检查的 Plugin SDK。

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-health-report.schema.json",
+  "title": "LCnd Network Health Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "evidence_mode", "status", "summary", "findings"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evidence_mode": {"const": "synthetic"},
+    "status": {"enum": ["SIMULATED_PASS", "SIMULATED_ROLLBACK"]},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 512},
+    "findings": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/finding"}}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "scope", "explanation", "action"],
+      "properties": {
+        "code": {"type": "string", "minLength": 1, "maxLength": 64},
+        "scope": {"type": "string", "minLength": 1, "maxLength": 64},
+        "explanation": {"type": "string", "minLength": 1, "maxLength": 512},
+        "action": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    }
+  }
+}

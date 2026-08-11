@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-node.schema.json",
+  "title": "LCnd Network Node Descriptor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "node_id", "display_name", "direction", "engine", "secret_ref", "capabilities", "enabled"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "node_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "display_name": {"type": "string", "minLength": 1, "maxLength": 128},
+    "direction": {"enum": ["china_egress", "global_egress"]},
+    "engine": {"const": "sing-box"},
+    "secret_ref": {"type": "string", "pattern": "^lcnd-secret://[a-z0-9][a-z0-9/_-]{1,127}$"},
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tcp", "udp", "ipv4", "ipv6"],
+      "properties": {
+        "tcp": {"type": "boolean"},
+        "udp": {"type": "boolean"},
+        "ipv4": {"type": "boolean"},
+        "ipv6": {"type": "boolean"}
+      }
+    },
+    "enabled": {"type": "boolean"},
+    "valid_until": {"type": "string", "format": "date-time"}
+  }
+}

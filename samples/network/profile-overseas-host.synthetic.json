@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "overseas-host",
+  "name": "global_direct_domestic_tunnel",
+  "node_id": "china-primary",
+  "target_set_id": "domestic-services",
+  "protected_target_set_id": "management"
+}

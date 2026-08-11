@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "node_id": "global-primary",
+  "display_name": "Synthetic global egress",
+  "direction": "global_egress",
+  "engine": "sing-box",
+  "secret_ref": "lcnd-secret://nodes/global-primary",
+  "capabilities": {"tcp": true, "udp": true, "ipv4": true, "ipv6": false},
+  "enabled": true
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "node_id": "china-primary",
+  "display_name": "Synthetic China egress",
+  "direction": "china_egress",
+  "engine": "sing-box",
+  "secret_ref": "lcnd-secret://nodes/china-primary",
+  "capabilities": {"tcp": true, "udp": true, "ipv4": true, "ipv6": false},
+  "enabled": true
+}

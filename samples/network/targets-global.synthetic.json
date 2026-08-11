@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "target_set_id": "global-services",
+  "revision": 1,
+  "purpose": "Synthetic global service targets",
+  "targets": [
+    {"kind": "domain", "value": "api.example.com", "protocol": "tcp", "ports": [443]},
+    {"kind": "ip_cidr", "value": "203.0.113.0/24"}
+  ]
+}

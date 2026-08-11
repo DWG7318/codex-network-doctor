@@ -9,6 +9,8 @@ $go = ".\.tools\go\bin\go.exe" # 或 PATH 中的 go
 & $go test -race ./...
 & $go vet ./...
 & $go build -trimpath -o .\bin\cnd.exe .\cmd\cnd
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build.ps1 -SkipRace
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps1
 ```
 
 ## Required behavior tests
@@ -30,6 +32,13 @@ $go = ".\.tools\go\bin\go.exe" # 或 PATH 中的 go
   不得把已完成的三次失败证据误报为样本不足。
 - SOCKS5 测试必须把目标域名交给代理解析，且不得读取或输出节点凭据。
 - `cnd网速检测.exe` 默认进入只读测速模式，不得因文件名解析错误进入修复模式或触发 UAC。
+- 网络 node、target set 和 route profile 必须严格拒绝未知字段、嵌入式凭据和方向不匹配。
+- 两个批准的路由 Profile 必须分别绑定 `china_egress` 与 `global_egress`，并产生确定性计划。
+- 管理目标必须直连；与隧道目标发生域名、协议、端口或 CIDR 重叠时规划失败。
+- sing-box candidate 允许包含受保护材料，但必须以新文件创建；最终 plan、摘要、回执、报告和错误不得泄漏材料。
+- `simulate` 成功只产生 `VERIFIED`，验证失败或超时只产生 `ROLLED_BACK`。
+- 所有网络报告必须使用 `evidence_mode=synthetic`，状态只能是 `SIMULATED_PASS` 或 `SIMULATED_ROLLBACK`。
+- `cnd-network` 不得包含或执行 sudo、systemd、路由写入、服务安装和任意生产命令。
 
 ## Windows smoke tests
 
@@ -58,6 +67,23 @@ $go = ".\.tools\go\bin\go.exe" # 或 PATH 中的 go
 
 验收：当前支持的 Windows 环境中 15 个 Collector 成功。旧版 Windows 缺少 Cmdlet 时允许生成 `partial` 包，但失败项必须有错误和 stderr 证据。
 
+## Ubuntu network-core synthetic smoke test
+
+先交叉构建：
+
+```powershell
+.\scripts\build-linux.ps1
+```
+
+再使用 `samples/network/*.synthetic.json` 依次运行 `plan`、`render`、`simulate` 和 `report`。
+临时节点材料只能使用文档地址与明显标注的测试字符串，并放在受控临时目录。验收条件：
+
+- 草案、最终计划、回执和报告均可解析为 JSON。
+- 相同输入产生字节一致的草案和摘要。
+- candidate 含测试材料，但 stdout、stderr 和四个公共产物不含测试材料。
+- report 为 `evidence_mode=synthetic`；不得出现真实服务器健康声明。
+- 测试后逐文件清理 candidate 和临时材料。
+
 ## Tamper test
 
 1. 解压有效 ZIP。
@@ -67,7 +93,8 @@ $go = ".\.tools\go\bin\go.exe" # 或 PATH 中的 go
 
 ## Race and static checks
 
-发布构建必须保存 `go test -race ./...`、`go vet ./...` 和编译命令输出。安装了 `golangci-lint` 时执行：
+发布构建必须保存 `go test -race ./...`、`go vet ./...`、Windows 五个可执行文件构建和
+Ubuntu amd64 `cnd-network` 交叉构建的命令输出。安装了 `golangci-lint` 时执行：
 
 ```powershell
 golangci-lint run

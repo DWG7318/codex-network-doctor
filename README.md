@@ -18,6 +18,35 @@ Codex Network Doctor 的 `cnd.exe` 是一个 Windows 网络证据采集器。它
 - 固定目录顺序、ZIP 时间戳和权限位，保证相同暂存内容得到相同 ZIP 字节。
 - 独立的 `validate` 命令检查路径安全、重复条目、必需文件、大小和 SHA-256。
 
+## Ubuntu 网络规划与模拟（v0.3.0）
+
+`cnd-network` 是与 `cnd.exe`、Windows 修复器和网速检测器相互隔离的 Ubuntu 网络规划 CLI。
+当前版本面向 Ubuntu 24.04 amd64，只实现严格校验、双向分流规划、sing-box 候选配置渲染和
+合成执行模拟，不执行真实服务器网络变更。
+
+两种方向使用同一套底层模型：
+
+- `global_direct_domestic_tunnel`：海外主机默认直连，指定国内目标经中国出口节点。
+- `domestic_direct_global_tunnel`：国内主机默认直连，指定国外目标经全球出口节点。
+- 管理网段作为受保护目标始终直连；它与隧道目标重叠时规划失败。
+
+目标引擎固定为 sing-box `1.13.12`，但仓库不捆绑、不下载也不安装 sing-box。仓库中的节点、
+目标集和路由 Profile 样例全部是合成数据；模拟回执与健康报告固定使用
+`evidence_mode=synthetic`，不能当作真实服务器健康结论。
+
+```powershell
+.\bin\cnd-network.exe version
+.\bin\cnd-network.exe validate --kind node --input .\samples\network\node-china-egress.synthetic.json
+.\scripts\build-linux.ps1
+```
+
+命令面包括 `validate`、`plan`、`render`、`simulate` 和 `report`。`render` 读取的节点材料以及生成的
+sing-box candidate 都是敏感资产：candidate 只能写入新文件，不得输出到终端或提交到 Git；
+最终 plan 只保存 `secret_ref` 与 candidate SHA-256。
+
+LCSP 对接、真实节点、sudo/systemd 代办和生产路由执行均留待后续版本。详细状态机、文件合同、
+退出码和不兼容行为见 [RFC 0003](docs/RFC/0003-ubuntu-network-core.md)。
+
 ## 双击离线采集
 
 把 `cnd.exe` 复制到故障电脑，然后直接双击：
@@ -187,6 +216,7 @@ logs/
 - [系统设计](docs/SDD.md)
 - [Collector Catalog](docs/COLLECTOR_CATALOG.md)
 - [Evidence ZIP RFC](docs/RFC/0001-evidence-package.md)
+- [Ubuntu 网络核心 RFC](docs/RFC/0003-ubuntu-network-core.md)
 - [开源工具评估](docs/OPEN_SOURCE_EVALUATION.md)
 - [测试手册](docs/TEST_HANDBOOK.md)
 - [Backlog](docs/BACKLOG.md)

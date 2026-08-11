@@ -1,13 +1,17 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$Version,
-    [string]$OutputDirectory = (Join-Path (Split-Path -Parent $PSScriptRoot) 'bin'),
+    [string]$OutputDirectory,
     [switch]$SkipRace
 )
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $localGo = Join-Path $repositoryRoot '.tools\go\bin\go.exe'
+
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
+    $OutputDirectory = Join-Path $repositoryRoot 'bin'
+}
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $Version = (Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'VERSION')).Trim()

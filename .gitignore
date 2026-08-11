@@ -5,6 +5,8 @@
 /out/
 /release/
 *.test
+__pycache__/
+*.pyc
 *.exe
 *.zip
 *.log

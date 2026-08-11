@@ -27,6 +27,7 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 		"docs/VERSIONING.md",
 		"internal/casebook/cases/CND-CASE-2026-001.md",
 		"docs/RFC/0001-evidence-package.md",
+		"docs/RFC/0003-ubuntu-network-core.md",
 		"docs/ADR/0001-use-osquery-as-optional-core-provider.md",
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
@@ -46,6 +47,7 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 		"samples/network/profile-domestic-host.synthetic.json",
 		"scripts/bootstrap-osquery.ps1",
 		"scripts/build.ps1",
+		"scripts/build-linux.ps1",
 		".github/CODEOWNERS",
 	}
 	for _, relativePath := range required {
@@ -137,17 +139,40 @@ func TestBootstrapPinsVerifiedOsqueryWithoutInstallingService(t *testing.T) {
 }
 
 func TestBuildScriptConfiguresWindowsRaceToolchain(t *testing.T) {
-	scriptPath := filepath.Join(repositoryRoot(t), "scripts", "build.ps1")
-	data, err := os.ReadFile(scriptPath)
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v", err)
-	}
-	script := string(data)
+	script := readAsset(t, "scripts/build.ps1")
 	for _, required := range []string{"CGO_ENABLED", "mingw64", "CC", "test -race"} {
 		if !strings.Contains(script, required) {
 			t.Errorf("build script missing race toolchain configuration %q", required)
 		}
 	}
+	for _, required := range []string{"cmd\\cnd-network", "cnd-network.exe"} {
+		if !strings.Contains(script, required) {
+			t.Errorf("build script missing network CLI output %q", required)
+		}
+	}
+}
+
+func TestLinuxBuildScriptCrossCompilesOnlyNetworkCLI(t *testing.T) {
+	script := readAsset(t, "scripts/build-linux.ps1")
+	for _, required := range []string{"GOOS", "linux", "GOARCH", "amd64", "CGO_ENABLED", "cmd\\cnd-network"} {
+		if !strings.Contains(script, required) {
+			t.Errorf("linux build script missing %q", required)
+		}
+	}
+	for _, forbidden := range []string{"docker", "systemctl", "sudo", "apt install", "sing-box install"} {
+		if strings.Contains(strings.ToLower(script), forbidden) {
+			t.Errorf("linux build script contains side-effect primitive %q", forbidden)
+		}
+	}
+}
+
+func readAsset(t *testing.T, relativePath string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(repositoryRoot(t), filepath.FromSlash(relativePath)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
 }
 
 func repositoryRoot(t *testing.T) string {

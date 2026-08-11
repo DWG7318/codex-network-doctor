@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.3.0 — 2026-08-12
+
+- 新增独立的 simulation-only `cnd-network`，面向 Ubuntu 24.04 amd64 的双向网络规划。
+- 新增严格 node、target set、route profile、change plan、execution receipt 和 health report 合同与合成样例。
+- 新增确定性路由规划，支持海外主机访问国内目标和国内主机访问国外目标，并保护管理直连路径。
+- 新增 sing-box 1.13.12 candidate 渲染；节点材料只进入权限受限 candidate，最终计划与摘要保持脱敏。
+- 新增 success、verification failure 和 timeout 合成状态机；所有报告固定为 `evidence_mode=synthetic`。
+- Windows 构建保留原有四个可执行文件并增加 `cnd-network.exe`；新增 Ubuntu amd64 无副作用交叉构建。
+- 保持 `cnd.exe` 被动采集、Windows 修复和只读网速检测合同不变。
+- LCSP 集成、真实节点、sudo/systemd 代办、真实链路探测与生产路由执行继续延期。
+
 ## v0.2.0 — 2026-08-04
 
 - 新增可双击的只读 `cnd网速检测.exe` 和 `cnd网络修复.exe speed`。

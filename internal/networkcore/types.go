@@ -95,3 +95,39 @@ type ValidationReport struct {
 	Valid         bool              `json:"valid"`
 	Issues        []ValidationIssue `json:"issues"`
 }
+
+type Outbound string
+
+const (
+	OutboundDirect Outbound = "direct"
+	OutboundTunnel Outbound = "lcnd-tunnel"
+)
+
+type RouteDecision struct {
+	TargetSetID string     `json:"target_set_id"`
+	Rule        TargetRule `json:"rule"`
+	Outbound    Outbound   `json:"outbound"`
+}
+
+type CandidateSpec struct {
+	Engine        string `json:"engine"`
+	EngineVersion string `json:"engine_version"`
+	SecretRef     string `json:"secret_ref"`
+}
+
+type PlanDraft struct {
+	SchemaVersion      string          `json:"schema_version"`
+	State              PlanState       `json:"state"`
+	ToolVersion        string          `json:"tool_version"`
+	Platform           string          `json:"platform"`
+	Architecture       string          `json:"architecture"`
+	ProfileID          string          `json:"profile_id"`
+	NodeID             string          `json:"node_id"`
+	NodeDirection      Direction       `json:"node_direction"`
+	DefaultOutbound    Outbound        `json:"default_outbound"`
+	TunnelOutbound     Outbound        `json:"tunnel_outbound"`
+	Decisions          []RouteDecision `json:"decisions"`
+	ProtectedDecisions []RouteDecision `json:"protected_decisions"`
+	Candidate          CandidateSpec   `json:"candidate"`
+	SimulationOnly     bool            `json:"simulation_only"`
+}

@@ -1,6 +1,7 @@
 package networkcli
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,6 +16,8 @@ import (
 )
 
 const maxInputBytes = 1 << 20
+
+var errInputTooLarge = errors.New("input too large")
 
 type operationSummary struct {
 	SchemaVersion string                        `json:"schema_version"`
@@ -262,7 +265,14 @@ func decodeContractFile[T any](path, role string, decode func(io.Reader) (T, err
 		return zero, 1, errors.New(role + "_READ_FAILED")
 	}
 	defer file.Close()
-	value, err := decode(io.LimitReader(file, maxInputBytes))
+	data, err := readBounded(file)
+	if errors.Is(err, errInputTooLarge) {
+		return zero, 2, errors.New(role + "_INPUT_TOO_LARGE")
+	}
+	if err != nil {
+		return zero, 1, errors.New(role + "_READ_FAILED")
+	}
+	value, err := decode(bytes.NewReader(data))
 	if err != nil {
 		return value, 2, err
 	}
@@ -276,7 +286,14 @@ func decodeJSONFile[T any](path, role string, validate func(T) error) (T, int, e
 		return value, 1, errors.New(role + "_READ_FAILED")
 	}
 	defer file.Close()
-	decoder := json.NewDecoder(io.LimitReader(file, maxInputBytes))
+	data, err := readBounded(file)
+	if errors.Is(err, errInputTooLarge) {
+		return value, 2, errors.New(role + "_INPUT_TOO_LARGE")
+	}
+	if err != nil {
+		return value, 1, errors.New(role + "_READ_FAILED")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&value); err != nil {
 		return value, 2, errors.New(role + "_DECODE_FAILED")
@@ -289,6 +306,17 @@ func decodeJSONFile[T any](path, role string, validate func(T) error) (T, int, e
 		return value, 2, err
 	}
 	return value, 0, nil
+}
+
+func readBounded(reader io.Reader) ([]byte, error) {
+	data, err := io.ReadAll(io.LimitReader(reader, maxInputBytes+1))
+	if err != nil {
+		return nil, errors.New("input read failed")
+	}
+	if len(data) > maxInputBytes {
+		return nil, errInputTooLarge
+	}
+	return data, nil
 }
 
 func validateDraft(draft networkcore.PlanDraft) error {

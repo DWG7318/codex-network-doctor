@@ -131,3 +131,22 @@ type PlanDraft struct {
 	Candidate          CandidateSpec   `json:"candidate"`
 	SimulationOnly     bool            `json:"simulation_only"`
 }
+
+type NetworkChangePlan struct {
+	SchemaVersion      string          `json:"schema_version"`
+	PlanID             string          `json:"plan_id"`
+	State              PlanState       `json:"state"`
+	ToolVersion        string          `json:"tool_version"`
+	Platform           string          `json:"platform"`
+	Architecture       string          `json:"architecture"`
+	ProfileID          string          `json:"profile_id"`
+	NodeID             string          `json:"node_id"`
+	NodeDirection      Direction       `json:"node_direction"`
+	DefaultOutbound    Outbound        `json:"default_outbound"`
+	TunnelOutbound     Outbound        `json:"tunnel_outbound"`
+	Decisions          []RouteDecision `json:"decisions"`
+	ProtectedDecisions []RouteDecision `json:"protected_decisions"`
+	Candidate          CandidateSpec   `json:"candidate"`
+	CandidateSHA256    string          `json:"candidate_sha256"`
+	SimulationOnly     bool            `json:"simulation_only"`
+}

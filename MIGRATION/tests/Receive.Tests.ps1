@@ -12,14 +12,23 @@ $testRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("lcnd-receive-test-{0}"
 $packageRoot = Join-Path $testRoot 'package'
 $workspaceRoot = Join-Path $packageRoot 'workspace'
 $destinationRoot = Join-Path $testRoot 'restored'
+$testFileName = 'cnd诊断结果-test.txt'
 
 try {
     New-Item -ItemType Directory -Path $workspaceRoot -Force | Out-Null
-    Set-Content -LiteralPath (Join-Path $workspaceRoot 'README.md') -Value 'LCnd test workspace' -Encoding UTF8
+    [IO.File]::WriteAllText(
+        (Join-Path $workspaceRoot $testFileName),
+        'LCnd test workspace',
+        [Text.UTF8Encoding]::new($false)
+    )
 
-    $relativePath = 'workspace/README.md'
-    $hash = (Get-FileHash -LiteralPath (Join-Path $workspaceRoot 'README.md') -Algorithm SHA256).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $packageRoot 'manifest.sha256') -Value ("{0}  {1}" -f $hash, $relativePath) -Encoding UTF8
+    $relativePath = "workspace/$testFileName"
+    $hash = (Get-FileHash -LiteralPath (Join-Path $workspaceRoot $testFileName) -Algorithm SHA256).Hash.ToLowerInvariant()
+    [IO.File]::WriteAllText(
+        (Join-Path $packageRoot 'manifest.sha256'),
+        ("{0}  {1}`n" -f $hash, $relativePath),
+        [Text.UTF8Encoding]::new($false)
+    )
 
     $packageMigration = Join-Path $packageRoot 'MIGRATION'
     New-Item -ItemType Directory -Path $packageMigration -Force | Out-Null
@@ -34,7 +43,7 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "RECEIVE.ps1 returned exit code $LASTEXITCODE"
     }
-    if ((Get-Content -Raw -LiteralPath (Join-Path $destinationRoot 'README.md')).Trim() -ne 'LCnd test workspace') {
+    if ((Get-Content -Raw -LiteralPath (Join-Path $destinationRoot $testFileName)).Trim() -ne 'LCnd test workspace') {
         throw 'restored workspace content mismatch'
     }
 

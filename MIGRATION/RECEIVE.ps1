@@ -56,7 +56,7 @@ if ($lcspArchives.Count -gt 0) {
     throw "迁移包混入了明确排除的 LCSP 归档：$($lcspArchives[0].FullName)"
 }
 
-$manifestLines = @(Get-Content -LiteralPath $manifest | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$manifestLines = @(Get-Content -LiteralPath $manifest -Encoding UTF8 | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 if ($manifestLines.Count -eq 0) {
     throw 'manifest.sha256 为空'
 }

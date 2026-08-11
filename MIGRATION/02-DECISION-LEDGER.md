@@ -17,8 +17,8 @@
 | D-013 | Provide local paths first during a network incident | A GitHub link is useless when the affected machine is offline | Handoffs and support messages name the local executable first |
 | D-014 | Do not equate recovery with root cause | A controlled restart changes several variables | Investigation must distinguish port, privilege, timing, crash, and external termination |
 | D-015 | Keep speed diagnostics read-only and serial | Concurrent probes or tuning could destabilize v2rayN and confound evidence | No automatic tuning, TUN switching, or process restart in speed mode |
-| D-016 | Keep LCSP completely separate | LCSP has its own repository, credentials, history, and lifecycle | Exclude all LCSP paths and archives from Git, J-drive package, and cleanup |
+| D-016 | Keep LCSP completely separate | LCSP has its own repository, credentials, history, and lifecycle | Exclude all LCSP paths and archives from Git, the transfer package, and cleanup |
 | D-017 | Put mandatory takeover knowledge in Git | Codex memories are generated and auxiliary | `AGENTS.md` and `MIGRATION/*.md` are the receiving agent's source of truth |
 | D-018 | Export sanitized task history privately, not publicly | Full context aids takeover, but raw tasks can contain credentials and unrelated-project state | Redacted LCnd-only JSONL exports live in `private-context`; source-host originals remain untouched in Codex storage |
 | D-019 | Do not migrate authentication state | Tokens and SSH keys are machine/account secrets and often nonportable | Receiving host signs in independently only when required |
-| D-020 | Require two verified backups before source cleanup | Cleanup is destructive even when authorized | GitHub commit and J-drive manifest must both verify before deleting local source/tooling |
+| D-020 | Require two verified backups before source cleanup | Cleanup is destructive even when authorized | GitHub commit and the Desktop transfer-package manifest must both verify before deleting local source/tooling |

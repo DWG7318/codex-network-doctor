@@ -3,7 +3,7 @@
 The source host may be slimmed only after both backups pass:
 
 1. GitHub `main` resolves to the recorded migration commit and the public repository remains readable.
-2. The mobile-drive `manifest.sha256` passes, the Git bundle verifies, and an isolated restore from the mobile-drive workspace passes tests, vet, and build.
+2. The Desktop transfer package's `manifest.sha256` passes, the Git bundle verifies, and an isolated restore from its workspace passes tests, vet, and build.
 
 ## Preserve on the source host
 
@@ -14,10 +14,10 @@ Keep a compact archive outside the source working tree containing:
 - the original MasterSpec archive and original incident evidence or immutable pointers to their existing locations;
 - package manifest and SHA-256 values;
 - GitHub repository URL, branch/tag list, exact commit IDs, and push verification;
-- J-drive volume identity and package path;
+- system-resolved Desktop path and transfer-package path;
 - build, restore, and cleanup receipts.
 
-The source host's original Codex session files are global app history, not project source: do not copy, edit, or delete them during slimming. Do not keep a second source checkout, `.git`, portable SDK, build cache, binaries, or release archive on the source host after successful acceptance; those belong to GitHub and the verified mobile-drive package.
+The source host's original Codex session files are global app history, not project source: do not copy, edit, or delete them during slimming. Do not keep a second source checkout, `.git`, portable SDK, build cache, binaries, or release archive inside `C:\LCnd` after successful acceptance; those belong to GitHub and the verified Desktop transfer package.
 
 ## Never touch as part of LCnd cleanup
 

@@ -83,4 +83,4 @@ Current capability version at migration planning time: `0.2.0`.
 
 ## Historical sources in the private migration context
 
-The mobile-drive package contains sanitized LCnd Codex session JSONL exports, relevant session-index records, the original MasterSpec archive, user-supplied fault snapshots, selected screenshots/logs, and a hash/provenance index. Credential values, opaque encrypted reasoning, LCSP-related records, and the current migration turn are deliberately excluded. These materials are private evidence and must never be pushed to the public repository.
+The private transfer package contains sanitized LCnd Codex session JSONL exports, relevant session-index records, the original MasterSpec archive, user-supplied fault snapshots, selected screenshots/logs, and a hash/provenance index. Credential values, opaque encrypted reasoning, LCSP-related records, and the current migration turn are deliberately excluded. These materials are private evidence and must never be pushed to the public repository.

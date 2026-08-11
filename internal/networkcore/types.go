@@ -150,3 +150,55 @@ type NetworkChangePlan struct {
 	CandidateSHA256    string          `json:"candidate_sha256"`
 	SimulationOnly     bool            `json:"simulation_only"`
 }
+
+type ExecutionState string
+
+const (
+	ExecutionVerified   ExecutionState = "VERIFIED"
+	ExecutionRolledBack ExecutionState = "ROLLED_BACK"
+)
+
+type ActionResult struct {
+	Action string `json:"action"`
+	Status string `json:"status"`
+	Code   string `json:"code"`
+}
+
+type ExecutionReceipt struct {
+	SchemaVersion     string         `json:"schema_version"`
+	PlanID            string         `json:"plan_id"`
+	EvidenceMode      string         `json:"evidence_mode"`
+	Scenario          Scenario       `json:"scenario"`
+	State             ExecutionState `json:"state"`
+	CandidateSHA256   string         `json:"candidate_sha256"`
+	RollbackArmed     bool           `json:"rollback_armed"`
+	RollbackTriggered bool           `json:"rollback_triggered"`
+	Actions           []ActionResult `json:"actions"`
+}
+
+type EvidenceMode string
+
+const EvidenceSynthetic EvidenceMode = "synthetic"
+
+type HealthStatus string
+
+const (
+	HealthSimulatedPass     HealthStatus = "SIMULATED_PASS"
+	HealthSimulatedRollback HealthStatus = "SIMULATED_ROLLBACK"
+)
+
+type Finding struct {
+	Code        string `json:"code"`
+	Scope       string `json:"scope"`
+	Explanation string `json:"explanation"`
+	Action      string `json:"action"`
+}
+
+type NetworkHealthReport struct {
+	SchemaVersion string       `json:"schema_version"`
+	PlanID        string       `json:"plan_id"`
+	EvidenceMode  EvidenceMode `json:"evidence_mode"`
+	Status        HealthStatus `json:"status"`
+	Summary       string       `json:"summary"`
+	Findings      []Finding    `json:"findings"`
+}

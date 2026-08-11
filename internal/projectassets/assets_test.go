@@ -31,6 +31,19 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
 		"schemas/collector-catalog.schema.json",
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
+		"samples/network/node-china-egress.synthetic.json",
+		"samples/network/node-global-egress.synthetic.json",
+		"samples/network/targets-domestic.synthetic.json",
+		"samples/network/targets-global.synthetic.json",
+		"samples/network/protected-management.synthetic.json",
+		"samples/network/profile-overseas-host.synthetic.json",
+		"samples/network/profile-domestic-host.synthetic.json",
 		"scripts/bootstrap-osquery.ps1",
 		"scripts/build.ps1",
 		".github/CODEOWNERS",
@@ -48,6 +61,12 @@ func TestJSONSchemasAreValidJSON(t *testing.T) {
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
 		"schemas/collector-catalog.schema.json",
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
 	} {
 		t.Run(relativePath, func(t *testing.T) {
 			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relativePath)))
@@ -60,6 +79,32 @@ func TestJSONSchemasAreValidJSON(t *testing.T) {
 			}
 			if document["$schema"] != "https://json-schema.org/draft/2020-12/schema" {
 				t.Fatalf("$schema = %v", document["$schema"])
+			}
+		})
+	}
+}
+
+func TestNetworkJSONSchemasRejectAdditionalProperties(t *testing.T) {
+	root := repositoryRoot(t)
+	for _, relativePath := range []string{
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
+	} {
+		t.Run(relativePath, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relativePath)))
+			if err != nil {
+				t.Fatalf("ReadFile() error = %v", err)
+			}
+			var schema map[string]any
+			if err := json.Unmarshal(data, &schema); err != nil {
+				t.Fatalf("schema JSON error = %v", err)
+			}
+			if schema["additionalProperties"] != false {
+				t.Fatalf("additionalProperties = %v", schema["additionalProperties"])
 			}
 		})
 	}

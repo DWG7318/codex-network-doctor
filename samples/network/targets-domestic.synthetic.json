@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "target_set_id": "domestic-services",
+  "revision": 1,
+  "purpose": "Synthetic domestic service targets",
+  "targets": [
+    {"kind": "domain", "value": "api.example.cn", "protocol": "tcp", "ports": [443]},
+    {"kind": "domain", "value": "models.example.cn", "protocol": "tcp", "ports": [443]}
+  ]
+}

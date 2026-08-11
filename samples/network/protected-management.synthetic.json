@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "target_set_id": "management",
+  "revision": 1,
+  "purpose": "Synthetic protected management routes",
+  "targets": [
+    {"kind": "ip_cidr", "value": "127.0.0.0/8"},
+    {"kind": "ip_cidr", "value": "10.0.0.0/8"},
+    {"kind": "ip_cidr", "value": "192.168.0.0/16"}
+  ]
+}

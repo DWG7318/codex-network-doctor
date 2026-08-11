@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-execution-receipt.schema.json",
+  "title": "LCnd Network Execution Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "evidence_mode", "scenario", "state", "candidate_sha256", "rollback_armed", "rollback_triggered", "actions"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/sha256"},
+    "evidence_mode": {"const": "synthetic"},
+    "scenario": {"enum": ["success", "verification_failed", "timeout"]},
+    "state": {"enum": ["VERIFIED", "ROLLED_BACK"]},
+    "candidate_sha256": {"$ref": "#/$defs/sha256"},
+    "rollback_armed": {"type": "boolean"},
+    "rollback_triggered": {"type": "boolean"},
+    "actions": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/action"}}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "status", "code"],
+      "properties": {
+        "action": {"type": "string", "minLength": 1, "maxLength": 64},
+        "status": {"type": "string", "minLength": 1, "maxLength": 32},
+        "code": {"type": "string", "minLength": 1, "maxLength": 64}
+      }
+    }
+  }
+}

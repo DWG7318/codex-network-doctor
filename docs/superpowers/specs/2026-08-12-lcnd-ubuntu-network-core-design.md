@@ -1,7 +1,7 @@
 # LCnd Ubuntu 双向网络核心设计
 
 - 日期：2026-08-12
-- 状态：`OWNER_DIRECTION_CONFIRMED / USER_REVIEW_PENDING`
+- 状态：`OWNER_APPROVED_FOR_IMPLEMENTATION_PLANNING`
 - 当前产品版本：`0.2.0`
 - 首个服务器基线：Ubuntu 24.04 LTS
 - 当前设计范围：LCnd 独立能力；LCSP 集成仅记录边界，暂不实施

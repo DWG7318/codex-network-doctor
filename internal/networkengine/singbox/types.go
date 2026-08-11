@@ -1,6 +1,7 @@
 package singbox
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -28,7 +29,14 @@ type RenderSummary struct {
 
 func DecodeMaterial(reader io.Reader) (NodeMaterial, error) {
 	var material NodeMaterial
-	decoder := json.NewDecoder(io.LimitReader(reader, maxMaterialBytes))
+	data, err := io.ReadAll(io.LimitReader(reader, maxMaterialBytes+1))
+	if err != nil {
+		return material, errors.New("MATERIAL_READ_FAILED")
+	}
+	if len(data) > maxMaterialBytes {
+		return material, errors.New("MATERIAL_INPUT_TOO_LARGE")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&material); err != nil {
 		return material, errors.New("MATERIAL_DECODE_FAILED")

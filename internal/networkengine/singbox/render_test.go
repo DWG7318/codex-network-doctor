@@ -163,6 +163,14 @@ func TestDecodeMaterialRejectsUnknownField(t *testing.T) {
 	}
 }
 
+func TestDecodeMaterialRejectsInputOverLimit(t *testing.T) {
+	input := `{"schema_version":"1.0.0","secret_ref":"lcnd-secret://nodes/cn-primary","outbound":{"type":"shadowsocks"}}` + strings.Repeat(" ", maxMaterialBytes)
+	_, err := DecodeMaterial(strings.NewReader(input))
+	if err == nil || err.Error() != "MATERIAL_INPUT_TOO_LARGE" {
+		t.Fatalf("error = %v, want MATERIAL_INPUT_TOO_LARGE", err)
+	}
+}
+
 func validDraft(t *testing.T) networkcore.PlanDraft {
 	t.Helper()
 	draft, err := networkcore.BuildDraft(

@@ -103,6 +103,39 @@ func TestRunRenderPreflightsAllOutputs(t *testing.T) {
 	}
 }
 
+func TestRunSimulateRejectsOversizedPlan(t *testing.T) {
+	root := t.TempDir()
+	planPath := filepath.Join(root, "plan.json")
+	outputPath := filepath.Join(root, "receipt.json")
+	plan := networkcore.NetworkChangePlan{
+		SchemaVersion: networkcore.SchemaVersion,
+		PlanID:        strings.Repeat("a", 64), State: networkcore.PlanReady,
+		ToolVersion: "0.3.0", Platform: "ubuntu-24.04", Architecture: "amd64",
+		ProfileID: "overseas-host", NodeID: "cn-primary", NodeDirection: networkcore.DirectionChinaEgress,
+		DefaultOutbound: networkcore.OutboundDirect, TunnelOutbound: networkcore.OutboundTunnel,
+		Candidate:       networkcore.CandidateSpec{Engine: "sing-box", EngineVersion: networkcore.SingBoxVersion, SecretRef: "lcnd-secret://nodes/cn-primary"},
+		CandidateSHA256: strings.Repeat("b", 64), SimulationOnly: true,
+	}
+	data, _, err := networkcore.CanonicalJSON(plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = append(data, bytes.Repeat([]byte(" "), maxInputBytes)...)
+	if err := os.WriteFile(planPath, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	exit := Run(context.Background(), []string{
+		"simulate", "--plan", planPath, "--scenario", "success", "--output", outputPath,
+	}, &stdout, &stderr, "0.3.0")
+	if exit != 2 {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+	}
+	if _, err := os.Stat(outputPath); !os.IsNotExist(err) {
+		t.Fatalf("receipt should not be created, stat error = %v", err)
+	}
+}
+
 func TestRunSyntheticWorkflowIsDeterministicAndSynthetic(t *testing.T) {
 	paths := writeContractInputs(t)
 	draftA := filepath.Join(paths.Root, "draft-a.json")

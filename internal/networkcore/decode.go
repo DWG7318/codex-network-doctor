@@ -1,6 +1,7 @@
 package networkcore
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +13,14 @@ const maxContractBytes = 1 << 20
 
 func decodeStrict[T any](reader io.Reader, kind string, validate func(T) []ValidationIssue) (T, error) {
 	var value T
-	decoder := json.NewDecoder(io.LimitReader(reader, maxContractBytes))
+	data, err := io.ReadAll(io.LimitReader(reader, maxContractBytes+1))
+	if err != nil {
+		return value, fmt.Errorf("%s_READ_FAILED", strings.ToUpper(kind))
+	}
+	if len(data) > maxContractBytes {
+		return value, fmt.Errorf("%s_INPUT_TOO_LARGE", strings.ToUpper(kind))
+	}
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&value); err != nil {
 		return value, fmt.Errorf("%s_DECODE_FAILED: %w", strings.ToUpper(kind), sanitizeJSONError(err))

@@ -43,6 +43,24 @@ func TestDecodeNodeRejectsUnknownField(t *testing.T) {
 	}
 }
 
+func TestDecodeNodeRejectsInputOverLimit(t *testing.T) {
+	input := `{
+		"schema_version":"1.0.0",
+		"node_id":"cn-primary",
+		"display_name":"Synthetic China egress",
+		"direction":"china_egress",
+		"engine":"sing-box",
+		"secret_ref":"lcnd-secret://nodes/cn-primary",
+		"capabilities":{"tcp":true,"udp":true,"ipv4":true,"ipv6":false},
+		"enabled":true
+	}` + strings.Repeat(" ", maxContractBytes)
+
+	_, err := DecodeNode(strings.NewReader(input))
+	if err == nil || !strings.Contains(err.Error(), "INPUT_TOO_LARGE") {
+		t.Fatalf("error = %v, want INPUT_TOO_LARGE", err)
+	}
+}
+
 func TestNodeValidateRejectsEmbeddedEndpointCredential(t *testing.T) {
 	node := validNode()
 	node.SecretRef = "https://user:password@example.invalid/subscription"

@@ -56,6 +56,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version s
 		return runSimulate(args[1:], stdout, stderr)
 	case "report":
 		return runReport(args[1:], stdout, stderr)
+	case "continuity":
+		return runContinuity(args[1:], stdout, stderr)
 	case "help", "--help", "-h":
 		printUsage(stdout)
 		return 0
@@ -64,6 +66,237 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version s
 		printUsage(stderr)
 		return 2
 	}
+}
+
+func runContinuity(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		printError(stderr, "CONTINUITY_COMMAND_REQUIRED")
+		return 2
+	}
+	switch args[0] {
+	case "validate":
+		return runContinuityValidate(args[1:], stdout, stderr)
+	case "candidate-summary":
+		return runCandidateSummary(args[1:], stdout, stderr)
+	case "probe-plan":
+		return runContinuityProbePlan(args[1:], stdout, stderr)
+	case "evaluate":
+		return runContinuityEvaluate(args[1:], stdout, stderr)
+	case "guard-check":
+		return runContinuityGuard(args[1:], stdout, stderr)
+	case "rollback-evaluate":
+		return runContinuityRollback(args[1:], stdout, stderr)
+	case "attachment-render":
+		return runAttachmentRender(args[1:], stdout, stderr)
+	default:
+		printError(stderr, "CONTINUITY_COMMAND_UNSUPPORTED")
+		return 2
+	}
+}
+
+func runContinuityValidate(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity validate")
+	input := flags.String("input", "", "continuity plan input")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !validInputPath(*input) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	_, exit, err := decodeContractFile(*input, "CONTINUITY_PLAN", networkcore.DecodeContinuityPlan)
+	if err != nil {
+		var contractErr networkcore.ValidationError
+		if errors.As(err, &contractErr) {
+			writeValidation(stdout, *format, networkcore.ValidationReport{SchemaVersion: networkcore.SchemaVersion, Kind: "continuity-plan", Valid: false, Issues: contractErr.Issues})
+		}
+		return reportCommandError(stderr, exit, err)
+	}
+	writeValidation(stdout, *format, networkcore.ValidationReport{SchemaVersion: networkcore.SchemaVersion, Kind: "continuity-plan", Valid: true, Issues: []networkcore.ValidationIssue{}})
+	return 0
+}
+
+func runCandidateSummary(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity candidate-summary")
+	input := flags.String("input", "", "continuity plan input")
+	output := flags.String("output", "", "candidate summary output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !validInputPath(*input) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "SUMMARY_OUTPUT_EXISTS")
+		return 1
+	}
+	plan, exit, err := decodeContractFile(*input, "CONTINUITY_PLAN", networkcore.DecodeContinuityPlan)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	summary, err := networkcore.BuildCandidateSummary(plan, plan.Engine.CandidateSHA256)
+	if err != nil {
+		printError(stderr, safeCode(err))
+		return 2
+	}
+	digest, err := writeCanonicalExclusive(*output, summary, 0o644)
+	if err != nil {
+		printError(stderr, "SUMMARY_WRITE_FAILED")
+		return 1
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "candidate-summary", State: "SUMMARY_READY", Digest: digest, PlanID: plan.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+}
+
+func runContinuityProbePlan(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity probe-plan")
+	input := flags.String("input", "", "continuity plan input")
+	output := flags.String("output", "", "probe plan output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !validInputPath(*input) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "PROBE_PLAN_OUTPUT_EXISTS")
+		return 1
+	}
+	plan, exit, err := decodeContractFile(*input, "CONTINUITY_PLAN", networkcore.DecodeContinuityPlan)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	probes, err := networkcore.BuildDefaultProbePlan(plan)
+	if err != nil {
+		printError(stderr, safeCode(err))
+		return 2
+	}
+	digest, err := writeCanonicalExclusive(*output, probes, 0o644)
+	if err != nil {
+		printError(stderr, "PROBE_PLAN_WRITE_FAILED")
+		return 1
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "probe-plan", State: "PROBE_PLAN_READY", Digest: digest, PlanID: plan.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+}
+
+func runContinuityEvaluate(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity evaluate")
+	planPath := flags.String("plan", "", "continuity plan input")
+	evidencePath := flags.String("evidence", "", "probe evidence input")
+	output := flags.String("output", "", "evaluation output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !allInputPaths(*planPath, *evidencePath) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "EVALUATION_OUTPUT_EXISTS")
+		return 1
+	}
+	plan, exit, err := decodeContractFile(*planPath, "CONTINUITY_PLAN", networkcore.DecodeContinuityPlan)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	evidence, exit, err := decodeContractFile(*evidencePath, "PROBE_EVIDENCE", networkcore.DecodeProbeEvidence)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	evaluation, err := networkcore.EvaluateProbeEvidence(plan, evidence)
+	if err != nil {
+		printError(stderr, safeCode(err))
+		return 2
+	}
+	digest, err := writeCanonicalExclusive(*output, evaluation, 0o644)
+	if err != nil {
+		printError(stderr, "EVALUATION_WRITE_FAILED")
+		return 1
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "evaluate", State: string(evaluation.Status), Digest: digest, PlanID: plan.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+}
+
+func runContinuityGuard(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity guard-check")
+	input := flags.String("input", "", "continuity plan input")
+	protectedPath := flags.String("protected", "", "protected target input")
+	output := flags.String("output", "", "guard output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !allInputPaths(*input, *protectedPath) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "GUARD_OUTPUT_EXISTS")
+		return 1
+	}
+	plan, exit, err := decodeContractFile(*input, "CONTINUITY_PLAN", networkcore.DecodeContinuityPlan)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	protected, exit, err := decodeContractFile(*protectedPath, "PROTECTED_TARGET_SET", networkcore.DecodeProtectedTargetSet)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	result := networkcore.GuardCheck(plan, protected)
+	digest, err := writeCanonicalExclusive(*output, result, 0o644)
+	if err != nil {
+		printError(stderr, "GUARD_WRITE_FAILED")
+		return 1
+	}
+	if result.Status == networkcore.GuardBlocked {
+		writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "guard-check", State: string(result.Status), Digest: digest, PlanID: plan.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+		return 2
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "guard-check", State: string(result.Status), Digest: digest, PlanID: plan.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+}
+
+func runContinuityRollback(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity rollback-evaluate")
+	receiptPath := flags.String("receipt", "", "rollback receipt input")
+	output := flags.String("output", "", "rollback decision output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !validInputPath(*receiptPath) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "ROLLBACK_OUTPUT_EXISTS")
+		return 1
+	}
+	receipt, exit, err := decodeContractFile(*receiptPath, "ROLLBACK_RECEIPT", networkcore.DecodeRollbackReceipt)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	decision, err := networkcore.EvaluateRollback(receipt)
+	if err != nil {
+		printError(stderr, safeCode(err))
+		return 2
+	}
+	digest, err := writeCanonicalExclusive(*output, decision, 0o644)
+	if err != nil {
+		printError(stderr, "ROLLBACK_WRITE_FAILED")
+		return 1
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "rollback-evaluate", State: string(decision.Decision), Digest: digest, PlanID: decision.PlanID, EvidenceMode: networkcore.EvidenceSynthetic})
+}
+
+func runAttachmentRender(args []string, stdout, stderr io.Writer) int {
+	flags := newFlagSet("continuity attachment-render")
+	input := flags.String("input", "", "application attachment input")
+	output := flags.String("output", "", "canonical attachment output")
+	format := flags.String("format", "text", "output format")
+	if !parseFlags(flags, args, stderr) || !validInputPath(*input) || !validOutputPath(*output) || !validFormat(*format) {
+		printError(stderr, "INVALID_ARGUMENTS")
+		return 2
+	}
+	if !preflightAbsent(*output) {
+		printError(stderr, "ATTACHMENT_OUTPUT_EXISTS")
+		return 1
+	}
+	attachment, exit, err := decodeContractFile(*input, "APPLICATION_ATTACHMENT", networkcore.DecodeApplicationAttachment)
+	if err != nil {
+		return reportCommandError(stderr, exit, err)
+	}
+	digest, err := writeCanonicalExclusive(*output, attachment, 0o644)
+	if err != nil {
+		printError(stderr, "ATTACHMENT_WRITE_FAILED")
+		return 1
+	}
+	return writeSummary(stdout, *format, operationSummary{SchemaVersion: networkcore.SchemaVersion, Command: "attachment-render", State: "ATTACHMENT_READY", Digest: digest, EvidenceMode: networkcore.EvidenceSynthetic})
 }
 
 func runValidate(args []string, stdout, stderr io.Writer) int {
@@ -460,5 +693,5 @@ func printError(output io.Writer, code string) {
 }
 
 func printUsage(output io.Writer) {
-	_, _ = io.WriteString(output, "usage: cnd-network <version|validate|plan|render|simulate|report> [options]\n")
+	_, _ = io.WriteString(output, "usage: cnd-network <version|validate|plan|render|simulate|report|continuity> [options]\n")
 }

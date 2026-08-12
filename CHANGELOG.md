@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.4.0 — 2026-08-13
+
+- 新增应用级私有出站服务计划、secret reference、分层 probe、保护目标、rollback receipt 与 LCapi application attachment 严格合同。
+- 固定 `direct`、`lcnd-egress-cn`、`lcnd-egress-global` 三类稳定线路身份，国内与海外方向共用同一模型。
+- 强制新服务仅监听 loopback 或带批准引用的私网，拒绝公网监听、匿名访问、宿主默认路由、全局 DNS/hosts、防火墙、系统代理、Tailnet 和整机 TUN 变化。
+- 新增 `continuity validate/candidate-summary/probe-plan/evaluate/guard-check/rollback-evaluate/attachment-render` 离线命令；所有生成物确定、脱敏且不可覆盖。
+- 新增 direct/egress 分层 synthetic evaluator；样本不足或缺层输出 `INSUFFICIENT_EVIDENCE`，不声明真实 Ubuntu、节点或生产健康。
+- 将旧公网 TCP/443/HAProxy→Caddy/Xray/客户端线路、SSH、LCSP Access、LCgpu 与系统网络设置列为永久保护目标。
+- 保持 Windows 被动采集、显式修复、撤销和只读测速边界不变；未修改 LCSP、LCapi、LCgpu，未连接服务器、导入真实节点或部署生产。
+- 仓库实现完成不等于 LCSP 接入完成，不等于 LCapi 接入完成，也不等于生产验收完成。
+
 ## v0.3.0 — 2026-08-12
 
 - 新增独立的 simulation-only `cnd-network`，面向 Ubuntu 24.04 amd64 的双向网络规划。

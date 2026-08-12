@@ -39,6 +39,26 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps
 - `simulate` 成功只产生 `VERIFIED`，验证失败或超时只产生 `ROLLED_BACK`。
 - 所有网络报告必须使用 `evidence_mode=synthetic`，状态只能是 `SIMULATED_PASS` 或 `SIMULATED_ROLLBACK`。
 - `cnd-network` 不得包含或执行 sudo、systemd、路由写入、服务安装和任意生产命令。
+- continuity service endpoint 只能是 loopback 或带批准引用的私网；公网地址、TCP 22/80/443、匿名
+  consumer 和任何宿主网络影响声明必须拒绝。
+- `direct`、`lcnd-egress-cn`、`lcnd-egress-global` 必须是三类固定 route identity；国内与海外
+  attachment 使用同一合同实现。
+- `lcsp-continuity-b` 与 `lcnd-egress-cn` 的 endpoint、credential/secret、probe、receipt、rollback
+  和 inbound tag 必须分离，任一交叉引用均拒绝。
+- connect/request/idle 超时必须在合同范围内；失败策略只能 fail-closed、暂停业务或回到命名
+  `direct`，禁止未知线路回退。
+- 应用 probe 必须把 direct 与 egress 分层，至少各三个样本；缺层或不足输出
+  `INSUFFICIENT_EVIDENCE`，route identity 漂移失败关闭。
+- synthetic evaluation 固定 `production_healthy=false`；不得把 mock/synthetic 输出描述为真实 Ubuntu、
+  真实节点、真实 LCapi 请求或生产健康。
+- guard 必须保护旧公网 TCP/443/HAProxy→Caddy/Xray/客户端线路、SSH、LCSP Access、LCgpu、Tailnet、
+  默认路由、全局 DNS、防火墙和系统代理。
+- rollback receipt 必须绑定 expected/observed candidate SHA-256，只允许一个 workload 与一个
+  attachment；未武装回滚必须 fail-closed。
+- continuity 与 LCapi attachment JSON 严格拒绝未知字段和超过 1 MiB 的输入；所有输出确定且
+  `O_EXCL`，错误、stdout、样例与报告不回显原始输入或秘密。
+- continuity CLI 不得导入 `os/exec` 或调用 sudo、systemd、ip、nft、iptables、route、resolvectl、
+  tailscale、docker、ssh、curl、wget，也不得修改宿主网络。
 
 ## Windows smoke tests
 
@@ -83,6 +103,23 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps
 - candidate 含测试材料，但 stdout、stderr 和四个公共产物不含测试材料。
 - report 为 `evidence_mode=synthetic`；不得出现真实服务器健康声明。
 - 测试后逐文件清理 candidate 和临时材料。
+
+## Application private-egress synthetic smoke test
+
+只使用 `samples/network/*.synthetic.json`，在空临时目录运行：
+
+```powershell
+.\bin\cnd-network.exe continuity validate --input .\samples\network\egress-cn.synthetic.json
+.\bin\cnd-network.exe continuity candidate-summary --input .\samples\network\egress-cn.synthetic.json --output .\out\summary.json
+.\bin\cnd-network.exe continuity probe-plan --input .\samples\network\egress-cn.synthetic.json --output .\out\probes.json
+.\bin\cnd-network.exe continuity guard-check --input .\samples\network\egress-cn.synthetic.json --protected .\samples\network\protected-platform.synthetic.json --output .\out\guard.json
+.\bin\cnd-network.exe continuity rollback-evaluate --receipt .\samples\network\rollback-receipt.synthetic.json --output .\out\decision.json
+.\bin\cnd-network.exe continuity attachment-render --input .\samples\network\lcapi-egress-attachment.synthetic.json --output .\out\attachment.json
+```
+
+验收：第二次写同一路径返回 1 且原文件字节不变；公共输出无 secret value；guard 为只读；decision
+固定 `production_authorized=false`；没有网络连接、进程启动或宿主网络变化。`evaluate` 使用测试生成的
+synthetic evidence，缺少 direct 或 egress 三样本时必须输出 `INSUFFICIENT_EVIDENCE`。
 
 ## Tamper test
 

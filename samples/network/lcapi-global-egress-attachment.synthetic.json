@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "attachment_id": "lcapi-global-synthetic",
+  "consumer_id": "lcapi",
+  "consumer_identity_ref": "lcnd-identity://consumers/lcapi",
+  "selectors": [{"provider": "synthetic-global-provider", "model": "synthetic-model", "channel": "chat", "target_set_ref": "lcnd-targets://lcapi/global-synthetic"}],
+  "route": {"id": "lcnd-egress-global", "class": "global_egress"},
+  "endpoint_ref": "lcnd-endpoint://loopback/egress-global",
+  "credential_ref": "lcnd-secret://lcsp/egress-global/lcapi",
+  "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000},
+  "failure_policy": {"mode": "approved_direct", "approved_route_id": "direct"},
+  "business_probe_ref": "lcnd-probe://lcapi/global-synthetic",
+  "rollback": {"detach_only": true, "restore_route_id": "direct"},
+  "production_authorized": false
+}

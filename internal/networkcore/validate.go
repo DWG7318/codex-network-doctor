@@ -9,6 +9,7 @@ import (
 var (
 	idPattern        = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{1,63}$`)
 	secretRefPattern = regexp.MustCompile(`^lcnd-secret://[a-z0-9][a-z0-9/_-]{1,127}$`)
+	sha256RefPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 	domainPattern    = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$`)
 )
 

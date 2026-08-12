@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-candidate-summary.schema.json",
+  "title": "LCnd redacted candidate summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "purpose", "workload_id", "inbound_tag", "route", "endpoint_ref", "endpoint_scope", "candidate_sha256", "evidence_mode"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "purpose": {"enum": ["lcsp_continuity_b", "lcnd_egress_cn"]},
+    "workload_id": {"$ref": "#/$defs/id"},
+    "inbound_tag": {"$ref": "#/$defs/id"},
+    "route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"enum": ["direct", "lcnd-egress-cn", "lcnd-egress-global"]}, "class": {"enum": ["direct", "china_egress", "global_egress"]}}},
+    "endpoint_ref": {"type": "string", "pattern": "^lcnd-endpoint://", "maxLength": 256},
+    "endpoint_scope": {"enum": ["loopback", "approved_private_network"]},
+    "candidate_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "evidence_mode": {"const": "synthetic"}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"}}
+}

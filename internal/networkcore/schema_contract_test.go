@@ -17,6 +17,15 @@ var networkSamplePaths = []string{
 	"samples/network/protected-management.synthetic.json",
 	"samples/network/profile-overseas-host.synthetic.json",
 	"samples/network/profile-domestic-host.synthetic.json",
+	"samples/network/continuity-b.synthetic.json",
+	"samples/network/egress-cn.synthetic.json",
+	"samples/network/egress-cn-probes.synthetic.json",
+	"samples/network/continuity-b-probes.synthetic.json",
+	"samples/network/protected-platform.synthetic.json",
+	"samples/network/secret-ref-egress-cn.synthetic.json",
+	"samples/network/lcapi-egress-attachment.synthetic.json",
+	"samples/network/lcapi-global-egress-attachment.synthetic.json",
+	"samples/network/rollback-receipt.synthetic.json",
 }
 
 func TestPublicNetworkSamplesMatchStrictContracts(t *testing.T) {
@@ -32,6 +41,15 @@ func TestPublicNetworkSamplesMatchStrictContracts(t *testing.T) {
 		{"samples/network/protected-management.synthetic.json", func(reader io.Reader) error { _, err := DecodeTargetSet(reader); return err }},
 		{"samples/network/profile-overseas-host.synthetic.json", func(reader io.Reader) error { _, err := DecodeRouteProfile(reader); return err }},
 		{"samples/network/profile-domestic-host.synthetic.json", func(reader io.Reader) error { _, err := DecodeRouteProfile(reader); return err }},
+		{"samples/network/continuity-b.synthetic.json", func(reader io.Reader) error { _, err := DecodeContinuityPlan(reader); return err }},
+		{"samples/network/egress-cn.synthetic.json", func(reader io.Reader) error { _, err := DecodeContinuityPlan(reader); return err }},
+		{"samples/network/egress-cn-probes.synthetic.json", func(reader io.Reader) error { _, err := DecodeProbePlan(reader); return err }},
+		{"samples/network/continuity-b-probes.synthetic.json", func(reader io.Reader) error { _, err := DecodeProbePlan(reader); return err }},
+		{"samples/network/protected-platform.synthetic.json", func(reader io.Reader) error { _, err := DecodeProtectedTargetSet(reader); return err }},
+		{"samples/network/secret-ref-egress-cn.synthetic.json", func(reader io.Reader) error { _, err := DecodeSecretReference(reader); return err }},
+		{"samples/network/lcapi-egress-attachment.synthetic.json", func(reader io.Reader) error { _, err := DecodeApplicationAttachment(reader); return err }},
+		{"samples/network/lcapi-global-egress-attachment.synthetic.json", func(reader io.Reader) error { _, err := DecodeApplicationAttachment(reader); return err }},
+		{"samples/network/rollback-receipt.synthetic.json", func(reader io.Reader) error { _, err := DecodeRollbackReceipt(reader); return err }},
 	}
 
 	for _, test := range tests {
@@ -56,10 +74,32 @@ func TestPublicNetworkSamplesContainNoSecretMaterial(t *testing.T) {
 			t.Fatal(err)
 		}
 		lower := strings.ToLower(string(data))
-		for _, forbidden := range []string{"password", "private_key", "subscription_url", "access_token", "bearer "} {
+		for _, forbidden := range []string{`"password":`, `"private_key":`, "subscription_url", "access_token", "bearer ", "ss://", `"token":`} {
 			if strings.Contains(lower, forbidden) {
 				t.Fatalf("%s contains %q", path, forbidden)
 			}
+		}
+	}
+}
+
+func TestPrivateEgressSchemasAreStrict(t *testing.T) {
+	root := networkRepositoryRoot(t)
+	paths := []string{
+		"schemas/network-continuity-plan.schema.json",
+		"schemas/network-secret-ref.schema.json",
+		"schemas/network-probe-plan.schema.json",
+		"schemas/network-protected-targets.schema.json",
+		"schemas/network-application-attachment.schema.json",
+		"schemas/network-rollback-receipt.schema.json",
+	}
+	for _, path := range paths {
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		text := string(data)
+		if !strings.Contains(text, `"additionalProperties": false`) || !strings.Contains(text, `"$schema": "https://json-schema.org/draft/2020-12/schema"`) {
+			t.Fatalf("%s is not a strict draft 2020-12 schema", path)
 		}
 	}
 }

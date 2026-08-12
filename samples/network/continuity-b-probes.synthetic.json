@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "lcnd-plan-20260812-continuity-b-synthetic",
+  "workload_id": "lcsp-continuity-b",
+  "purpose": "lcsp_continuity_b",
+  "evidence_mode": "synthetic",
+  "probes": [
+    {"probe_id": "direct-control", "class": "direct_control_probe", "route": {"id": "direct", "class": "direct"}, "target": {"host": "control.example.invalid", "port": 443, "protocol": "https"}, "samples": 3, "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000}},
+    {"probe_id": "egress-continuity", "class": "egress_continuity_probe", "route": {"id": "lcnd-egress-global", "class": "global_egress"}, "target": {"host": "continuity.example.invalid", "port": 443, "protocol": "https"}, "samples": 3, "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000}},
+    {"probe_id": "protected-target", "class": "protected_target_probe", "route": {"id": "direct", "class": "direct"}, "target": {"host": "protected.example.invalid", "port": 443, "protocol": "https"}, "samples": 3, "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000}},
+    {"probe_id": "secret-leak", "class": "secret_leak_probe", "route": {"id": "lcnd-egress-global", "class": "global_egress"}, "target": {"host": "redaction.example.invalid", "port": 443, "protocol": "https"}, "samples": 3, "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000}}
+  ]
+}

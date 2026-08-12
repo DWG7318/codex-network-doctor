@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-continuity-plan.schema.json",
+  "title": "LCnd application-level private egress service plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "purpose", "target_platform", "host_ref", "workload_id", "route", "endpoint", "authentication", "timeouts", "failure_policy", "engine", "protected_targets_ref", "probe_plan_ref", "receipt_domain", "rollback_domain", "separate_from", "host_impact", "execution_authority", "production_authorized", "evidence_mode"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "purpose": {"enum": ["lcsp_continuity_b", "lcnd_egress_cn"]},
+    "target_platform": {"const": "ubuntu-24.04-amd64"},
+    "host_ref": {"type": "string", "pattern": "^lcsp://hosts/[a-z0-9/_-]+$", "maxLength": 256},
+    "workload_id": {"enum": ["lcsp-continuity-b", "lcnd-egress-cn"]},
+    "route": {"$ref": "#/$defs/route"},
+    "endpoint": {"$ref": "#/$defs/endpoint"},
+    "authentication": {"$ref": "#/$defs/authentication"},
+    "timeouts": {"$ref": "#/$defs/timeouts"},
+    "failure_policy": {"$ref": "#/$defs/failure_policy"},
+    "engine": {"$ref": "#/$defs/engine"},
+    "protected_targets_ref": {"type": "string", "pattern": "^lcnd://", "maxLength": 256},
+    "probe_plan_ref": {"type": "string", "pattern": "^lcnd://", "maxLength": 256},
+    "receipt_domain": {"$ref": "#/$defs/id"},
+    "rollback_domain": {"$ref": "#/$defs/id"},
+    "separate_from": {"type": "array", "minItems": 2, "maxItems": 8, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "host_impact": {"$ref": "#/$defs/host_impact"},
+    "execution_authority": {"const": "lcsp_required"},
+    "production_authorized": {"const": false},
+    "evidence_mode": {"const": "synthetic"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "secret_ref": {"type": "string", "pattern": "^lcnd-secret://[a-z0-9][a-z0-9/_-]{1,127}$"},
+    "route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"enum": ["direct", "lcnd-egress-cn", "lcnd-egress-global"]}, "class": {"enum": ["direct", "china_egress", "global_egress"]}}},
+    "endpoint": {"type": "object", "additionalProperties": false, "required": ["ref", "network", "address", "port", "scope"], "properties": {"ref": {"type": "string", "pattern": "^lcnd-endpoint://", "maxLength": 256}, "network": {"const": "tcp"}, "address": {"type": "string", "maxLength": 45}, "port": {"type": "integer", "minimum": 1, "maximum": 65535, "not": {"enum": [22, 80, 443]}}, "scope": {"enum": ["loopback", "approved_private_network"]}, "approved_network_ref": {"type": "string", "pattern": "^lcsp-network://", "maxLength": 256}}},
+    "authentication": {"type": "object", "additionalProperties": false, "required": ["required", "allow_anonymous", "consumers"], "properties": {"required": {"const": true}, "allow_anonymous": {"const": false}, "consumers": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "required": ["consumer_id", "identity_ref", "credential_ref"], "properties": {"consumer_id": {"$ref": "#/$defs/id"}, "identity_ref": {"type": "string", "pattern": "^lcnd-identity://consumers/", "maxLength": 256}, "credential_ref": {"$ref": "#/$defs/secret_ref"}}}}}},
+    "timeouts": {"type": "object", "additionalProperties": false, "required": ["connect_ms", "request_ms", "idle_ms"], "properties": {"connect_ms": {"type": "integer", "minimum": 100, "maximum": 60000}, "request_ms": {"type": "integer", "minimum": 100, "maximum": 120000}, "idle_ms": {"type": "integer", "minimum": 100, "maximum": 300000}}},
+    "failure_policy": {"type": "object", "additionalProperties": false, "required": ["mode"], "properties": {"mode": {"enum": ["fail_closed", "approved_direct", "pause_business"]}, "approved_route_id": {"const": "direct"}}},
+    "engine": {"type": "object", "additionalProperties": false, "required": ["name", "version", "candidate_sha256"], "properties": {"name": {"const": "sing-box"}, "version": {"const": "1.13.12"}, "candidate_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+    "host_impact": {"type": "object", "additionalProperties": false, "required": ["default_route", "global_dns", "hosts_file", "firewall", "system_proxy", "tailnet_preferences", "whole_host_tun"], "properties": {"default_route": {"const": false}, "global_dns": {"const": false}, "hosts_file": {"const": false}, "firewall": {"const": false}, "system_proxy": {"const": false}, "tailnet_preferences": {"const": false}, "whole_host_tun": {"const": false}}}
+  }
+}

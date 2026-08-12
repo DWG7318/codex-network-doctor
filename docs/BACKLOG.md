@@ -4,7 +4,9 @@
 
 ## Ubuntu Network Core 后续切片
 
-以下工作明确不属于 v0.3.0。LCSP 当前升级完成前，不修改 LCSP，也不实现其适配器。
+以下工作明确不属于 v0.4.0。LCSP 当前升级完成前，不修改 LCSP，也不实现其适配器。v0.4.0 只完成
+公开合同、离线 validator/evaluator 与合成样例；仓库实现完成不等于 LCSP 接入完成，不等于 LCapi
+接入完成，也不等于生产验收完成。
 
 1. **[probe] Ubuntu 24.04 只读链路健康检测**
    - 分层采集接口、DNS、路由、TCP/TLS/HTTP 和目标吞吐证据。
@@ -25,9 +27,23 @@
    - 必须先备份、预检管理通道、限时验证，并在失败或超时时自动回滚。
    - simulation-only CLI 不得被原地改造成隐式执行入口。
 
-5. **[pilot] 海外 LCAPI 到国内模型的首个真实试点**
+5. **[pilot] 海外 LCapi 到国内模型的首个真实试点**
    - 只在 Owner 提供节点并批准目标服务器后进行。
    - 先建立基线与只读证据，再小范围灰度；不得把试点凭据或原始配置提交到公开仓库。
+
+6. **[integration] LCapi application attachment 实际接入**
+   - 由 LCapi 评估和实现按 Provider、模型、渠道或目标集引用命名出口。
+   - 未绑定请求保持原 `direct`；失败策略和回滚必须遵循 v0.4.0 合同。
+   - 这项工作必须在 LCapi 仓库单独授权、测试和验收，LCnd 不越界修改。
+
+7. **[acceptance] 真实保护基线与生产验收**
+   - 由 LCSP/Owner 在单独授权下验证旧公网 TCP/443/HAProxy→Caddy/Xray/客户端线路、SSH、LCSP
+     Access、LCgpu、Tailnet 和系统网络设置保持不变。
+   - synthetic guard、probe 和 rollback decision 不能替代真实设备、真实节点与真实业务验收。
+
+8. **[platform] LCSP 托管与秘密注入**
+   - 实现低权限服务、私有 endpoint、credential injection、备份、回执和单 workload 回滚。
+   - 不复用 `lcsp-continuity-b` 与 `lcnd-egress-cn` 的 endpoint、secret、probe、receipt 或 rollback 域。
 
 ## v4.1
 

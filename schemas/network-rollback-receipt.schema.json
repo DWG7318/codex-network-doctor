@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-rollback-receipt.schema.json",
+  "title": "LCnd scoped rollback evaluator receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "workload_id", "rollback_domain", "attachment_id", "expected_candidate_sha256", "observed_candidate_sha256", "rollback_armed", "protected_targets_unchanged", "old_line_healthy", "triggers", "evidence_mode"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "workload_id": {"$ref": "#/$defs/id"},
+    "rollback_domain": {"$ref": "#/$defs/id"},
+    "attachment_id": {"$ref": "#/$defs/id"},
+    "expected_candidate_sha256": {"$ref": "#/$defs/digest"},
+    "observed_candidate_sha256": {"$ref": "#/$defs/digest"},
+    "rollback_armed": {"type": "boolean"},
+    "protected_targets_unchanged": {"type": "boolean"},
+    "old_line_healthy": {"type": "boolean"},
+    "triggers": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z0-9_]+$", "maxLength": 64}},
+    "evidence_mode": {"const": "synthetic"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

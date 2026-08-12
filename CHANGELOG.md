@@ -3,6 +3,8 @@
 ## v0.4.0 — 2026-08-13
 
 - 新增应用级私有出站服务计划、secret reference、分层 probe、保护目标、rollback receipt 与 LCapi application attachment 严格合同。
+- attachment 将 route、endpoint、credential 与 business probe 绑定到同一命名出口域，并精确绑定 consumer identity；selector 拒绝通配、空白和越界值。
+- secret reference 的安全/禁止输出集合精确闭合，continuity 与 egress workload 拒绝跨域引用。
 - 固定 `direct`、`lcnd-egress-cn`、`lcnd-egress-global` 三类稳定线路身份，国内与海外方向共用同一模型。
 - 强制新服务仅监听 loopback 或带批准引用的私网，拒绝公网监听、匿名访问、宿主默认路由、全局 DNS/hosts、防火墙、系统代理、Tailnet 和整机 TUN 变化。
 - 新增 `continuity validate/candidate-summary/probe-plan/evaluate/guard-check/rollback-evaluate/attachment-render` 离线命令；所有生成物确定、脱敏且不可覆盖。

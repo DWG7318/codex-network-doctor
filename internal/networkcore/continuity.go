@@ -150,6 +150,9 @@ func (plan ContinuityPlan) Validate() []ValidationIssue {
 		if plan.Route.Class == RouteDirect {
 			issues = addIssue(issues, "EGRESS_ROUTE_REQUIRED", "route.class", "continuity workload requires a named egress route")
 		}
+		if plan.Route != (RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}) {
+			issues = addIssue(issues, "PURPOSE_ROUTE_MISMATCH", "route", "continuity purpose requires the stable global egress route")
+		}
 	case PurposeLCNDEgressCN:
 		expectedWorkload = "lcnd-egress-cn"
 		if plan.Route.Class != RouteChinaEgress {
@@ -293,6 +296,8 @@ func (auth ServiceAuthentication) validate() []ValidationIssue {
 		issues = validateID(issues, "authentication.consumers.consumer_id", consumer.ConsumerID)
 		if !validReference(consumer.IdentityRef, "lcnd-identity://consumers/") {
 			issues = addIssue(issues, "CONSUMER_IDENTITY_REF_INVALID", "authentication.consumers.identity_ref", "consumer identity reference is invalid")
+		} else if consumer.IdentityRef != "lcnd-identity://consumers/"+consumer.ConsumerID {
+			issues = addIssue(issues, "CONSUMER_IDENTITY_MISMATCH", "authentication.consumers.identity_ref", "consumer identity does not match consumer_id")
 		}
 		if !secretRefPattern.MatchString(consumer.CredentialRef) {
 			issues = addIssue(issues, "CREDENTIAL_REF_INVALID", "authentication.consumers.credential_ref", "credential reference is invalid")
@@ -360,6 +365,29 @@ func (impact HostNetworkImpact) validate() []ValidationIssue {
 
 func validReference(value, prefix string) bool {
 	return strings.HasPrefix(value, prefix) && len(value) > len(prefix) && len(value) <= 256 && !strings.ContainsAny(value, " \t\r\n?#")
+}
+
+func egressDomainForRoute(route RouteIdentity) (string, bool) {
+	switch route {
+	case RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}:
+		return "egress-cn", true
+	case RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}:
+		return "egress-global", true
+	default:
+		return "", false
+	}
+}
+
+func referenceHasSegment(reference, segment string) bool {
+	if segment == "" {
+		return false
+	}
+	for _, part := range strings.Split(reference, "/") {
+		if part == segment {
+			return true
+		}
+	}
+	return false
 }
 
 var carrierGradeNAT = netip.MustParsePrefix("100.64.0.0/10")

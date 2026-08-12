@@ -136,6 +136,30 @@ func TestContinuityPurposeRequiresNamedEgressRoute(t *testing.T) {
 	}
 }
 
+func TestContinuityPlanBindsConsumerIdentity(t *testing.T) {
+	plan := validContinuityPlan()
+	plan.Authentication.Consumers[0].IdentityRef = "lcnd-identity://consumers/other"
+	if !hasIssue(plan.Validate(), "CONSUMER_IDENTITY_MISMATCH") {
+		t.Fatalf("Validate() issues = %#v", plan.Validate())
+	}
+}
+
+func TestContinuityPurposeBindsStableRouteDomain(t *testing.T) {
+	plan := validContinuityPlan()
+	plan.Purpose = PurposeLCSPContinuityB
+	plan.WorkloadID = "lcsp-continuity-b"
+	plan.Route = RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}
+	plan.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
+	plan.Authentication.Consumers = []ConsumerCredentialRef{{ConsumerID: "lcsp-control", IdentityRef: "lcnd-identity://consumers/lcsp-control", CredentialRef: "lcnd-secret://lcsp/continuity-b/client"}}
+	plan.ProbePlanRef = "lcnd://samples/network/continuity-b-probes.synthetic.json"
+	plan.ReceiptDomain = plan.WorkloadID
+	plan.RollbackDomain = plan.WorkloadID
+	plan.SeparateFrom = []string{"old-public-tcp-443", "lcnd-egress-cn"}
+	if !hasIssue(plan.Validate(), "PURPOSE_ROUTE_MISMATCH") {
+		t.Fatalf("Validate() issues = %#v", plan.Validate())
+	}
+}
+
 func TestBuildCandidateSummaryRejectsDigestMismatch(t *testing.T) {
 	plan := validContinuityPlan()
 	_, err := BuildCandidateSummary(plan, "sha256:"+strings.Repeat("b", 64))

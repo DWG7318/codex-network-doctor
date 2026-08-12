@@ -1,6 +1,12 @@
 package networkcore
 
-import "io"
+import (
+	"io"
+	"regexp"
+	"strings"
+)
+
+var selectorValuePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:/-]*$`)
 
 type ApplicationSelector struct {
 	Provider     string `json:"provider,omitempty"`
@@ -41,6 +47,8 @@ func (attachment ApplicationAttachment) Validate() []ValidationIssue {
 	issues = validateID(issues, "consumer_id", attachment.ConsumerID)
 	if !validReference(attachment.ConsumerIdentityRef, "lcnd-identity://consumers/") {
 		issues = addIssue(issues, "CONSUMER_IDENTITY_REF_INVALID", "consumer_identity_ref", "consumer identity reference is invalid")
+	} else if attachment.ConsumerIdentityRef != "lcnd-identity://consumers/"+attachment.ConsumerID {
+		issues = addIssue(issues, "CONSUMER_IDENTITY_MISMATCH", "consumer_identity_ref", "consumer identity does not match consumer_id")
 	}
 	if len(attachment.Selectors) == 0 || len(attachment.Selectors) > 64 {
 		issues = addIssue(issues, "SELECTOR_REQUIRED", "selectors", "a bounded explicit selector list is required")
@@ -51,6 +59,15 @@ func (attachment ApplicationAttachment) Validate() []ValidationIssue {
 		}
 		if selector.TargetSetRef != "" && !validReference(selector.TargetSetRef, "lcnd-targets://") {
 			issues = addIssue(issues, "TARGET_SET_REF_INVALID", "selectors.target_set_ref", "target set reference is invalid")
+		}
+		if selector.Provider != "" && !validSelectorValue(selector.Provider, 64) {
+			issues = addIssue(issues, "SELECTOR_PROVIDER_INVALID", "selectors.provider", "provider selector is invalid")
+		}
+		if selector.Model != "" && !validSelectorValue(selector.Model, 128) {
+			issues = addIssue(issues, "SELECTOR_MODEL_INVALID", "selectors.model", "model selector is invalid")
+		}
+		if selector.Channel != "" && !validSelectorValue(selector.Channel, 64) {
+			issues = addIssue(issues, "SELECTOR_CHANNEL_INVALID", "selectors.channel", "channel selector is invalid")
 		}
 	}
 	issues = append(issues, attachment.Route.validate("route")...)
@@ -68,6 +85,17 @@ func (attachment ApplicationAttachment) Validate() []ValidationIssue {
 	if !validReference(attachment.BusinessProbeRef, "lcnd-probe://") {
 		issues = addIssue(issues, "BUSINESS_PROBE_REF_INVALID", "business_probe_ref", "business probe reference is invalid")
 	}
+	if domain, ok := egressDomainForRoute(attachment.Route); ok {
+		if !referenceHasSegment(attachment.EndpointRef, domain) {
+			issues = addIssue(issues, "ENDPOINT_DOMAIN_MISMATCH", "endpoint_ref", "endpoint belongs to another egress domain")
+		}
+		if !referenceHasSegment(attachment.CredentialRef, domain) {
+			issues = addIssue(issues, "CREDENTIAL_DOMAIN_MISMATCH", "credential_ref", "credential belongs to another egress domain")
+		}
+		if !referenceHasSegment(attachment.BusinessProbeRef, domain) {
+			issues = addIssue(issues, "BUSINESS_PROBE_DOMAIN_MISMATCH", "business_probe_ref", "business probe belongs to another egress domain")
+		}
+	}
 	if !attachment.Rollback.DetachOnly || attachment.Rollback.RestoreRouteID != "direct" {
 		issues = addIssue(issues, "ROLLBACK_SCOPE_INVALID", "rollback", "rollback must detach one attachment and restore direct")
 	}
@@ -75,4 +103,16 @@ func (attachment ApplicationAttachment) Validate() []ValidationIssue {
 		issues = addIssue(issues, "PRODUCTION_AUTHORITY_FORBIDDEN", "production_authorized", "repository attachments cannot authorize production")
 	}
 	return issues
+}
+
+func validSelectorValue(value string, maxLength int) bool {
+	if len(value) == 0 || len(value) > maxLength || value != strings.TrimSpace(value) || !selectorValuePattern.MatchString(value) {
+		return false
+	}
+	switch strings.ToLower(value) {
+	case "all", "any", "default":
+		return false
+	default:
+		return true
+	}
 }

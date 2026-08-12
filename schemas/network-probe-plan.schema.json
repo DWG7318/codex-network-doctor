@@ -13,11 +13,36 @@
     "evidence_mode": {"const": "synthetic"},
     "probes": {"type": "array", "minItems": 2, "maxItems": 32, "items": {"$ref": "#/$defs/probe"}}
   },
+  "oneOf": [
+    {"properties": {"purpose": {"const": "lcsp_continuity_b"}, "workload_id": {"const": "lcsp-continuity-b"}, "probes": {"items": {"$ref": "#/$defs/continuity_probe"}}}},
+    {"properties": {"purpose": {"const": "lcnd_egress_cn"}, "workload_id": {"const": "lcnd-egress-cn"}, "probes": {"items": {"$ref": "#/$defs/application_probe"}}}}
+  ],
   "$defs": {
     "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
-    "route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"enum": ["direct", "lcnd-egress-cn", "lcnd-egress-global"]}, "class": {"enum": ["direct", "china_egress", "global_egress"]}}},
+    "route": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}}
+    ]},
+    "direct_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+    "china_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+    "global_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}},
     "timeouts": {"type": "object", "additionalProperties": false, "required": ["connect_ms", "request_ms", "idle_ms"], "properties": {"connect_ms": {"type": "integer", "minimum": 100, "maximum": 60000}, "request_ms": {"type": "integer", "minimum": 100, "maximum": 120000}, "idle_ms": {"type": "integer", "minimum": 100, "maximum": 300000}}},
     "target": {"type": "object", "additionalProperties": false, "required": ["host", "port", "protocol"], "properties": {"host": {"type": "string", "pattern": "^[a-z0-9.-]+$", "maxLength": 253}, "port": {"type": "integer", "minimum": 1, "maximum": 65535}, "protocol": {"enum": ["tcp", "tls", "https"]}}},
-    "probe": {"type": "object", "additionalProperties": false, "required": ["probe_id", "class", "route", "target", "samples", "timeouts"], "properties": {"probe_id": {"$ref": "#/$defs/id"}, "class": {"enum": ["direct_control_probe", "direct_application_probe", "egress_continuity_probe", "egress_application_probe", "protected_target_probe", "rollback_probe", "secret_leak_probe"]}, "route": {"$ref": "#/$defs/route"}, "target": {"$ref": "#/$defs/target"}, "samples": {"type": "integer", "minimum": 3, "maximum": 10}, "timeouts": {"$ref": "#/$defs/timeouts"}}}
+    "probe": {"type": "object", "additionalProperties": false, "required": ["probe_id", "class", "route", "target", "samples", "timeouts"], "properties": {"probe_id": {"$ref": "#/$defs/id"}, "class": {"enum": ["direct_control_probe", "direct_application_probe", "egress_continuity_probe", "egress_application_probe", "protected_target_probe", "rollback_probe", "secret_leak_probe"]}, "route": {"$ref": "#/$defs/route"}, "target": {"$ref": "#/$defs/target"}, "samples": {"type": "integer", "minimum": 3, "maximum": 10}, "timeouts": {"$ref": "#/$defs/timeouts"}}},
+    "application_probe": {"oneOf": [
+      {"properties": {"class": {"const": "direct_application_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "egress_application_probe"}, "route": {"$ref": "#/$defs/china_route"}}},
+      {"properties": {"class": {"const": "protected_target_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "rollback_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "secret_leak_probe"}, "route": {"$ref": "#/$defs/china_route"}}}
+    ]},
+    "continuity_probe": {"oneOf": [
+      {"properties": {"class": {"const": "direct_control_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "egress_continuity_probe"}, "route": {"$ref": "#/$defs/global_route"}}},
+      {"properties": {"class": {"const": "protected_target_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "rollback_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "secret_leak_probe"}, "route": {"$ref": "#/$defs/global_route"}}}
+    ]}
   }
 }

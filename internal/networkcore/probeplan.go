@@ -118,6 +118,13 @@ func (plan ProbePlan) Validate() []ValidationIssue {
 	requiredDirect, requiredEgress := ProbeDirectControl, ProbeEgressContinuity
 	if plan.Purpose == PurposeLCNDEgressCN {
 		requiredDirect, requiredEgress = ProbeDirectApplication, ProbeEgressApplication
+		if plan.WorkloadID != "lcnd-egress-cn" {
+			issues = addIssue(issues, "PURPOSE_WORKLOAD_MISMATCH", "workload_id", "application purpose requires the application egress workload")
+		}
+	} else if plan.Purpose == PurposeLCSPContinuityB {
+		if plan.WorkloadID != "lcsp-continuity-b" {
+			issues = addIssue(issues, "PURPOSE_WORKLOAD_MISMATCH", "workload_id", "continuity purpose requires the continuity workload")
+		}
 	} else if plan.Purpose != PurposeLCSPContinuityB {
 		issues = addIssue(issues, "PURPOSE_UNSUPPORTED", "purpose", "purpose is unsupported")
 	}
@@ -133,7 +140,11 @@ func (plan ProbePlan) Validate() []ValidationIssue {
 		}
 		if probe.Class == requiredEgress {
 			foundEgress = true
-			if probe.Route.Class == RouteDirect {
+			expectedRoute := RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
+			if plan.Purpose == PurposeLCNDEgressCN {
+				expectedRoute = RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}
+			}
+			if probe.Route != expectedRoute {
 				issues = addIssue(issues, "EGRESS_PROBE_ROUTE_INVALID", "probes.route", "egress probe must use named egress")
 			}
 		}
@@ -142,6 +153,9 @@ func (plan ProbePlan) Validate() []ValidationIssue {
 		}
 		if (plan.Purpose == PurposeLCNDEgressCN && (probe.Class == ProbeDirectControl || probe.Class == ProbeEgressContinuity)) || (plan.Purpose == PurposeLCSPContinuityB && (probe.Class == ProbeDirectApplication || probe.Class == ProbeEgressApplication)) {
 			issues = addIssue(issues, "PROBE_DOMAIN_MIXED", "probes.class", "probe class belongs to another workload domain")
+		}
+		if expectedRoute, routeBound := expectedProbeRoute(plan.WorkloadID, probe.Class); routeBound && probe.Route != expectedRoute {
+			issues = addIssue(issues, "PROBE_ROUTE_DOMAIN_MISMATCH", "probes.route", "probe route does not match its workload domain")
 		}
 		if !isLowerASCIIDomain(probe.Target.Host) || probe.Target.Port < 1 || probe.Target.Port > 65535 || !slices.Contains([]string{"tcp", "tls", "https"}, probe.Target.Protocol) {
 			issues = addIssue(issues, "PROBE_TARGET_INVALID", "probes.target", "probe target must be a bounded host, port, and protocol")
@@ -165,6 +179,9 @@ func (evidence ProbeEvidence) Validate() []ValidationIssue {
 	if evidence.EvidenceMode != EvidenceSynthetic {
 		issues = addIssue(issues, "EVIDENCE_MODE_INVALID", "evidence_mode", "offline evaluator accepts synthetic evidence only")
 	}
+	if evidence.WorkloadID != "lcsp-continuity-b" && evidence.WorkloadID != "lcnd-egress-cn" {
+		issues = addIssue(issues, "WORKLOAD_UNSUPPORTED", "workload_id", "probe evidence workload is unsupported")
+	}
 	if len(evidence.Results) == 0 || len(evidence.Results) > 32 {
 		issues = addIssue(issues, "PROBE_RESULTS_INVALID", "results", "a bounded result set is required")
 	}
@@ -180,8 +197,45 @@ func (evidence ProbeEvidence) Validate() []ValidationIssue {
 		if !sha256RefPattern.MatchString(result.EndpointIdentity) {
 			issues = addIssue(issues, "ENDPOINT_IDENTITY_INVALID", "results.endpoint_identity", "endpoint identity must be redacted")
 		}
+		expectedRoute, routeBound := expectedProbeRoute(evidence.WorkloadID, result.Class)
+		if routeBound && result.Route != expectedRoute {
+			issues = addIssue(issues, "EGRESS_PROBE_ROUTE_INVALID", "results.route", "probe route does not match its workload domain")
+		}
+		if !probeClassAllowedForWorkload(evidence.WorkloadID, result.Class) {
+			issues = addIssue(issues, "PROBE_DOMAIN_MIXED", "results.class", "probe class belongs to another workload domain")
+		}
 	}
 	return issues
+}
+
+func expectedProbeRoute(workloadID string, class ProbeClass) (RouteIdentity, bool) {
+	switch class {
+	case ProbeDirectControl, ProbeDirectApplication, ProbeProtectedTarget, ProbeRollback:
+		return RouteIdentity{ID: "direct", Class: RouteDirect}, true
+	case ProbeEgressApplication:
+		return RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}, workloadID == "lcnd-egress-cn"
+	case ProbeEgressContinuity:
+		return RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}, workloadID == "lcsp-continuity-b"
+	case ProbeSecretLeak:
+		if workloadID == "lcnd-egress-cn" {
+			return RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}, true
+		}
+		if workloadID == "lcsp-continuity-b" {
+			return RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}, true
+		}
+	}
+	return RouteIdentity{}, false
+}
+
+func probeClassAllowedForWorkload(workloadID string, class ProbeClass) bool {
+	switch workloadID {
+	case "lcnd-egress-cn":
+		return class != ProbeDirectControl && class != ProbeEgressContinuity
+	case "lcsp-continuity-b":
+		return class != ProbeDirectApplication && class != ProbeEgressApplication
+	default:
+		return false
+	}
 }
 
 func EvaluateProbeEvidence(plan ContinuityPlan, evidence ProbeEvidence) (ProbeEvaluation, error) {

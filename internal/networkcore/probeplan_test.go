@@ -1,6 +1,9 @@
 package networkcore
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestProbePlanSeparatesDirectAndApplicationEgress(t *testing.T) {
 	plan := validContinuityPlan()
@@ -40,6 +43,35 @@ func TestProbePlanRejectsMixedWorkloadProbeClasses(t *testing.T) {
 	}
 }
 
+func TestProbePlanBindsPurposeWorkloadAndApplicationRoute(t *testing.T) {
+	probes, err := BuildDefaultProbePlan(validContinuityPlan())
+	if err != nil {
+		t.Fatal(err)
+	}
+	probes.WorkloadID = "lcsp-continuity-b"
+	if !hasIssue(probes.Validate(), "PURPOSE_WORKLOAD_MISMATCH") {
+		t.Fatalf("Validate() issues = %#v", probes.Validate())
+	}
+	probes.WorkloadID = "lcnd-egress-cn"
+	probes.Probes[1].Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
+	if !hasIssue(probes.Validate(), "EGRESS_PROBE_ROUTE_INVALID") {
+		t.Fatalf("Validate() issues = %#v", probes.Validate())
+	}
+}
+
+func TestProbePlanBindsEveryProbeClassToWorkloadRoute(t *testing.T) {
+	probes, err := BuildDefaultProbePlan(validContinuityPlan())
+	if err != nil {
+		t.Fatal(err)
+	}
+	probes.Probes[2].Route = RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}
+	probes.Probes[3].Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
+	issues := probes.Validate()
+	if countIssues(issues, "PROBE_ROUTE_DOMAIN_MISMATCH") != 2 {
+		t.Fatalf("Validate() issues = %#v", issues)
+	}
+}
+
 func TestEvaluateProbeEvidenceReturnsInsufficientEvidenceWithoutLiveClaim(t *testing.T) {
 	plan := validContinuityPlan()
 	evidence := validProbeEvidence(plan)
@@ -61,12 +93,10 @@ func TestEvaluateProbeEvidenceFailsClosedOnRouteIdentityDrift(t *testing.T) {
 	plan := validContinuityPlan()
 	evidence := validProbeEvidence(plan)
 	evidence.Results[1].Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
-	report, err := EvaluateProbeEvidence(plan, evidence)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if report.Status != ProbeSyntheticFail || !containsString(report.Codes, "ROUTE_IDENTITY_MISMATCH") {
-		t.Fatalf("report = %#v", report)
+	_, err := EvaluateProbeEvidence(plan, evidence)
+	var validationErr ValidationError
+	if err == nil || !errors.As(err, &validationErr) || !hasIssue(validationErr.Issues, "EGRESS_PROBE_ROUTE_INVALID") {
+		t.Fatalf("error = %v", err)
 	}
 }
 
@@ -80,6 +110,19 @@ func TestEvaluateProbeEvidenceRequiresBothDirectAndEgressLayers(t *testing.T) {
 	}
 	if report.Status != ProbeInsufficientEvidence || !containsString(report.Codes, "DIRECT_EGRESS_EVIDENCE_REQUIRED") {
 		t.Fatalf("report = %#v", report)
+	}
+}
+
+func TestProbeEvidenceBindsKnownWorkloadToProbeRoute(t *testing.T) {
+	evidence := validProbeEvidence(validContinuityPlan())
+	evidence.Results[1].Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
+	if !hasIssue(evidence.Validate(), "EGRESS_PROBE_ROUTE_INVALID") {
+		t.Fatalf("Validate() issues = %#v", evidence.Validate())
+	}
+	evidence = validProbeEvidence(validContinuityPlan())
+	evidence.WorkloadID = "unknown-workload"
+	if !hasIssue(evidence.Validate(), "WORKLOAD_UNSUPPORTED") {
+		t.Fatalf("Validate() issues = %#v", evidence.Validate())
 	}
 }
 
@@ -105,4 +148,14 @@ func containsString(values []string, expected string) bool {
 		}
 	}
 	return false
+}
+
+func countIssues(issues []ValidationIssue, code string) int {
+	count := 0
+	for _, issue := range issues {
+		if issue.Code == code {
+			count++
+		}
+	}
+	return count
 }

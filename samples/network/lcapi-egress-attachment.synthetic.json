@@ -9,7 +9,7 @@
   "credential_ref": "lcnd-secret://lcsp/egress-cn/lcapi",
   "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000},
   "failure_policy": {"mode": "approved_direct", "approved_route_id": "direct"},
-  "business_probe_ref": "lcnd-probe://lcapi/domestic-synthetic",
+  "business_probe_ref": "lcnd-probe://lcapi/egress-cn/domestic-synthetic",
   "rollback": {"detach_only": true, "restore_route_id": "direct"},
   "production_authorized": false
 }

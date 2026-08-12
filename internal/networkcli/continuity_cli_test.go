@@ -107,6 +107,40 @@ func TestContinuityCLIRejectsMissingAndInvalidInputsWithStableExitCodes(t *testi
 	}
 }
 
+func TestContinuityAttachmentRenderRejectsCrossDomainAndBroadSelector(t *testing.T) {
+	root := t.TempDir()
+	tests := []struct {
+		name string
+		edit func(*networkcore.ApplicationAttachment)
+	}{
+		{"cross-domain", func(a *networkcore.ApplicationAttachment) {
+			a.Route = networkcore.RouteIdentity{ID: "lcnd-egress-global", Class: networkcore.RouteGlobalEgress}
+		}},
+		{"identity-mismatch", func(a *networkcore.ApplicationAttachment) { a.ConsumerIdentityRef = "lcnd-identity://consumers/other" }},
+		{"broad-selector", func(a *networkcore.ApplicationAttachment) { a.Selectors[0].Provider = "*" }},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			attachment := cliApplicationAttachment()
+			test.edit(&attachment)
+			input := filepath.Join(root, test.name+"-input.json")
+			output := filepath.Join(root, test.name+"-output.json")
+			writeCanonical(t, input, attachment)
+			var stdout, stderr bytes.Buffer
+			exit := Run(context.Background(), []string{"continuity", "attachment-render", "--input", input, "--output", output, "--format", "json"}, &stdout, &stderr, "0.4.0")
+			if exit != 2 {
+				t.Fatalf("exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+			}
+			if !strings.Contains(stderr.String(), "APPLICATION_ATTACHMENT_INVALID") || strings.Contains(stdout.String()+stderr.String(), "other") {
+				t.Fatalf("unstable or unredacted output: stdout=%q stderr=%q", stdout.String(), stderr.String())
+			}
+			if _, err := os.Stat(output); !os.IsNotExist(err) {
+				t.Fatalf("output should not exist: %v", err)
+			}
+		})
+	}
+}
+
 func runContinuityCommand(t *testing.T, args []string) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
@@ -121,5 +155,5 @@ func cliContinuityPlan() networkcore.ContinuityPlan {
 }
 
 func cliApplicationAttachment() networkcore.ApplicationAttachment {
-	return networkcore.ApplicationAttachment{SchemaVersion: networkcore.SchemaVersion, AttachmentID: "lcapi-domestic-synthetic", ConsumerID: "lcapi", ConsumerIdentityRef: "lcnd-identity://consumers/lcapi", Selectors: []networkcore.ApplicationSelector{{Provider: "synthetic-cn-provider", Model: "synthetic-model", Channel: "chat", TargetSetRef: "lcnd-targets://lcapi/domestic-synthetic"}}, Route: networkcore.RouteIdentity{ID: "lcnd-egress-cn", Class: networkcore.RouteChinaEgress}, EndpointRef: "lcnd-endpoint://loopback/egress-cn", CredentialRef: "lcnd-secret://lcsp/egress-cn/lcapi", Timeouts: networkcore.ServiceTimeouts{ConnectMilliseconds: 3000, RequestMilliseconds: 30000, IdleMilliseconds: 60000}, FailurePolicy: networkcore.FailurePolicy{Mode: networkcore.FailureApprovedDirect, ApprovedRouteID: "direct"}, BusinessProbeRef: "lcnd-probe://lcapi/domestic-synthetic", Rollback: networkcore.AttachmentRollback{DetachOnly: true, RestoreRouteID: "direct"}, ProductionAuthorized: false}
+	return networkcore.ApplicationAttachment{SchemaVersion: networkcore.SchemaVersion, AttachmentID: "lcapi-domestic-synthetic", ConsumerID: "lcapi", ConsumerIdentityRef: "lcnd-identity://consumers/lcapi", Selectors: []networkcore.ApplicationSelector{{Provider: "synthetic-cn-provider", Model: "synthetic-model", Channel: "chat", TargetSetRef: "lcnd-targets://lcapi/domestic-synthetic"}}, Route: networkcore.RouteIdentity{ID: "lcnd-egress-cn", Class: networkcore.RouteChinaEgress}, EndpointRef: "lcnd-endpoint://loopback/egress-cn", CredentialRef: "lcnd-secret://lcsp/egress-cn/lcapi", Timeouts: networkcore.ServiceTimeouts{ConnectMilliseconds: 3000, RequestMilliseconds: 30000, IdleMilliseconds: 60000}, FailurePolicy: networkcore.FailurePolicy{Mode: networkcore.FailureApprovedDirect, ApprovedRouteID: "direct"}, BusinessProbeRef: "lcnd-probe://lcapi/egress-cn/domestic-synthetic", Rollback: networkcore.AttachmentRollback{DetachOnly: true, RestoreRouteID: "direct"}, ProductionAuthorized: false}
 }

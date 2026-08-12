@@ -1,6 +1,8 @@
 package networkcore
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -102,6 +104,61 @@ func TestPrivateEgressSchemasAreStrict(t *testing.T) {
 			t.Fatalf("%s is not a strict draft 2020-12 schema", path)
 		}
 	}
+}
+
+func TestPrivateEgressSchemasBindRouteTuplesAndAttachmentDomains(t *testing.T) {
+	root := networkRepositoryRoot(t)
+	paths := []string{
+		"schemas/network-continuity-plan.schema.json",
+		"schemas/network-application-attachment.schema.json",
+		"schemas/network-candidate-summary.schema.json",
+		"schemas/network-probe-plan.schema.json",
+		"schemas/network-probe-evidence.schema.json",
+	}
+	for _, path := range paths {
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var document any
+		if err := json.Unmarshal(data, &document); err != nil {
+			t.Fatal(err)
+		}
+		if !schemaHasRouteOneOf(document) {
+			t.Fatalf("%s does not bind route id/class with oneOf", path)
+		}
+	}
+	attachment, err := os.ReadFile(filepath.Join(root, "schemas", "network-application-attachment.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(attachment, []byte(`"oneOf"`)) || !bytes.Contains(attachment, []byte(`egress-cn`)) || !bytes.Contains(attachment, []byte(`egress-global`)) {
+		t.Fatal("application attachment schema does not bind egress domains")
+	}
+}
+
+func schemaHasRouteOneOf(value any) bool {
+	switch typed := value.(type) {
+	case map[string]any:
+		if oneOf, ok := typed["oneOf"].([]any); ok && len(oneOf) >= 2 {
+			encoded, _ := json.Marshal(typed)
+			if bytes.Contains(encoded, []byte(`"id"`)) && bytes.Contains(encoded, []byte(`"class"`)) {
+				return true
+			}
+		}
+		for _, child := range typed {
+			if schemaHasRouteOneOf(child) {
+				return true
+			}
+		}
+	case []any:
+		for _, child := range typed {
+			if schemaHasRouteOneOf(child) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func networkRepositoryRoot(t *testing.T) string {

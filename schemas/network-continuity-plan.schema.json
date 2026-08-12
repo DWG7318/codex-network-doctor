@@ -28,10 +28,17 @@
     "production_authorized": {"const": false},
     "evidence_mode": {"const": "synthetic"}
   },
+  "oneOf": [
+    {"properties": {"purpose": {"const": "lcsp_continuity_b"}, "workload_id": {"const": "lcsp-continuity-b"}, "route": {"$ref": "#/$defs/global_route"}, "endpoint": {"properties": {"ref": {"pattern": "/continuity-b(/|$)"}}}, "probe_plan_ref": {"pattern": "continuity-b"}, "receipt_domain": {"const": "lcsp-continuity-b"}, "rollback_domain": {"const": "lcsp-continuity-b"}}},
+    {"properties": {"purpose": {"const": "lcnd_egress_cn"}, "workload_id": {"const": "lcnd-egress-cn"}, "route": {"$ref": "#/$defs/china_route"}, "endpoint": {"properties": {"ref": {"pattern": "/egress-cn(/|$)"}}}, "probe_plan_ref": {"pattern": "egress-cn"}, "receipt_domain": {"const": "lcnd-egress-cn"}, "rollback_domain": {"const": "lcnd-egress-cn"}}}
+  ],
   "$defs": {
     "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
     "secret_ref": {"type": "string", "pattern": "^lcnd-secret://[a-z0-9][a-z0-9/_-]{1,127}$"},
-    "route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"enum": ["direct", "lcnd-egress-cn", "lcnd-egress-global"]}, "class": {"enum": ["direct", "china_egress", "global_egress"]}}},
+    "direct_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+    "china_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+    "global_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}},
+    "route": {"oneOf": [{"$ref": "#/$defs/direct_route"}, {"$ref": "#/$defs/china_route"}, {"$ref": "#/$defs/global_route"}]},
     "endpoint": {"type": "object", "additionalProperties": false, "required": ["ref", "network", "address", "port", "scope"], "properties": {"ref": {"type": "string", "pattern": "^lcnd-endpoint://", "maxLength": 256}, "network": {"const": "tcp"}, "address": {"type": "string", "maxLength": 45}, "port": {"type": "integer", "minimum": 1, "maximum": 65535, "not": {"enum": [22, 80, 443]}}, "scope": {"enum": ["loopback", "approved_private_network"]}, "approved_network_ref": {"type": "string", "pattern": "^lcsp-network://", "maxLength": 256}}},
     "authentication": {"type": "object", "additionalProperties": false, "required": ["required", "allow_anonymous", "consumers"], "properties": {"required": {"const": true}, "allow_anonymous": {"const": false}, "consumers": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "required": ["consumer_id", "identity_ref", "credential_ref"], "properties": {"consumer_id": {"$ref": "#/$defs/id"}, "identity_ref": {"type": "string", "pattern": "^lcnd-identity://consumers/", "maxLength": 256}, "credential_ref": {"$ref": "#/$defs/secret_ref"}}}}}},
     "timeouts": {"type": "object", "additionalProperties": false, "required": ["connect_ms", "request_ms", "idle_ms"], "properties": {"connect_ms": {"type": "integer", "minimum": 100, "maximum": 60000}, "request_ms": {"type": "integer", "minimum": 100, "maximum": 120000}, "idle_ms": {"type": "integer", "minimum": 100, "maximum": 300000}}},

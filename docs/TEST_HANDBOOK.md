@@ -41,6 +41,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps
 - `cnd-network` 不得包含或执行 sudo、systemd、路由写入、服务安装和任意生产命令。
 - continuity service endpoint 只能是 loopback 或带批准引用的私网；公网地址、TCP 22/80/443、匿名
   consumer 和任何宿主网络影响声明必须拒绝。
+- application attachment 的 route id/class、endpoint、credential 与 business probe 必须属于同一
+  `egress-cn` 或 `egress-global` 域；consumer identity 必须精确绑定 consumer ID。
+- Provider、模型、渠道 selector 必须拒绝通配、宽泛保留字、首尾空白和长度越界；Go 与 JSON Schema
+  必须使用相同上限。
+- SecretReference 的 allowed/forbidden output 必须分别精确等于固定安全集合，拒绝重复、缺项、额外项
+  和 continuity/egress workload 跨域引用。
 - `direct`、`lcnd-egress-cn`、`lcnd-egress-global` 必须是三类固定 route identity；国内与海外
   attachment 使用同一合同实现。
 - `lcsp-continuity-b` 与 `lcnd-egress-cn` 的 endpoint、credential/secret、probe、receipt、rollback

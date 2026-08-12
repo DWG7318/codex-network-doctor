@@ -58,6 +58,8 @@ consumer allowlist。
 
 `schemas/network-secret-ref.schema.json` 只允许 `lcnd-secret://` 引用。秘密值、URL、密码、Token、
 订阅和私钥禁止进入 Git、Schema 样例、stdout、stderr、错误、摘要、probe、receipt 或报告。
+`allowed_outputs` 必须精确为 `presence_status` 与 `redacted_digest`；`forbidden_outputs` 必须精确为
+`value`、`url`、`password`、`token`、`subscription`、`private_key`，不允许重复、缺项或额外项。
 
 ## 5. LCapi 消费合同
 
@@ -70,6 +72,11 @@ consumer allowlist。
 - 声明有界超时、失败策略和业务 probe；
 - 回滚时只 detach 该 attachment，并恢复稳定 `direct` 路径；
 - 保持 `production_authorized=false`。
+
+`consumer_identity_ref` 必须精确等于 `lcnd-identity://consumers/<consumer_id>`。线路 tuple 也必须闭合：
+`lcnd-egress-cn/china_egress` 只能引用含 `egress-cn` 路径段的 endpoint、credential 与 business probe；
+`lcnd-egress-global/global_egress` 只能引用 `egress-global` 域。Provider、模型和渠道 selector 有固定长度
+上限，只允许明确标识符，拒绝 `*`、`all`、`any`、`default`、首尾空白和其他宽泛值。
 
 未绑定请求与非指定请求保持原路径。合同禁止匿名、通配所有消费者和静默未知线路回退。
 

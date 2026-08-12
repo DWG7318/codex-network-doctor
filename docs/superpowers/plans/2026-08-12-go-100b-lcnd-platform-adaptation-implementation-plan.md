@@ -121,7 +121,7 @@ Use these public, non-secret fields for `network-continuity-plan.schema.json` an
   "engine": {
     "name": "sing-box",
     "version": "1.13.12",
-    "candidate_sha256": "sha256:synthetic-placeholder-digest-for-tests"
+    "candidate_sha256": "sha256:7265a50cf0ba3069353b7958dc98d138802ad94da92c6443b070921679d8ca6b"
   },
   "secret_refs": [
     {
@@ -138,6 +138,8 @@ Use these public, non-secret fields for `network-continuity-plan.schema.json` an
   "production_authorized": false
 }
 ```
+
+The sample `candidate_sha256` is closed over the fixed UTF-8 synthetic input `synthetic-lcsp-continuity-b-candidate-v1`. It is not a digest of a real server candidate or node secret.
 
 Use these public, non-secret fields for `network-secret-ref.schema.json`:
 
@@ -497,8 +499,11 @@ cnd-network continuity rollback-evaluate --receipt RECEIPT.json --output DECISIO
 Version rule:
 
 ```text
-When the implementation is complete and accepted, bump from the current version to the next material capability version.
-Keep VERSION, CHANGELOG, README, executable metadata, Git tag proposal, and release notes consistent.
+The current repository version is 0.3.0.
+GO-100B is a larger function, architecture, and product-scope change.
+Freeze the implementation target version at 0.4.0.
+When the implementation is complete and accepted, synchronize VERSION, CHANGELOG.md, README.md, executable metadata, release notes, and the later v0.4.0 Git tag plan.
+This planning CELL does not create or push a tag.
 ```
 
 TDD and verification commands:
@@ -545,10 +550,10 @@ Required GitHub route after all six CELL outcomes pass:
 ```text
 Work on a codex-prefixed feature branch.
 Commit only exact LCnd files for GO-100B.
-Push the feature branch to GitHub.
-Open a PR against the LCnd repository main branch.
+Push the feature branch to GitHub repository DWG7318/codex-network-doctor.
+Open a PR against DWG7318/codex-network-doctor main.
 Require reviewer or Owner acceptance before merge.
-Merge through PR into main only after all local gates and any GitHub checks pass.
+Merge through PR into DWG7318/codex-network-doctor main only after all local gates and any GitHub checks pass.
 After merge, verify main points at the accepted commit and record the version evidence.
 No production deployment is part of this publish route.
 ```

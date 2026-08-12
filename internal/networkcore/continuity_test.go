@@ -85,12 +85,41 @@ func TestContinuityPlanRejectsCrossDomainEndpointSecretAndProbeReferences(t *tes
 	plan := validContinuityPlan()
 	plan.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
 	plan.Authentication.Consumers[0].CredentialRef = "lcnd-secret://lcsp/continuity-b/client"
-	plan.ProbePlanRef = "lcnd://samples/network/continuity-b-probes.synthetic.json"
+	plan.ProbePlanRef = "lcnd://samples/network/continuity-b/probes.synthetic.json"
 	issues := plan.Validate()
 	for _, code := range []string{"ENDPOINT_DOMAIN_MISMATCH", "CREDENTIAL_DOMAIN_MISMATCH", "PROBE_DOMAIN_MISMATCH"} {
 		if !hasIssue(issues, code) {
 			t.Fatalf("Validate() did not contain %s: %#v", code, issues)
 		}
+	}
+}
+
+func TestContinuityPlanRejectsDomainSegmentBait(t *testing.T) {
+	tests := []struct {
+		name string
+		plan ContinuityPlan
+		edit func(*ContinuityPlan)
+		code string
+	}{
+		{"egress endpoint suffix", validContinuityPlan(), func(p *ContinuityPlan) { p.Endpoint.Ref = "lcnd-endpoint://loopback/egress-cn-evil" }, "ENDPOINT_DOMAIN_MISMATCH"},
+		{"egress credential suffix", validContinuityPlan(), func(p *ContinuityPlan) {
+			p.Authentication.Consumers[0].CredentialRef = "lcnd-secret://lcsp/egress-cn-evil/client"
+		}, "CREDENTIAL_DOMAIN_MISMATCH"},
+		{"egress probe prefix", validContinuityPlan(), func(p *ContinuityPlan) { p.ProbePlanRef = "lcnd://samples/network/not-egress-cn-bait" }, "PROBE_DOMAIN_MISMATCH"},
+		{"continuity endpoint suffix", validContinuityBPlan(), func(p *ContinuityPlan) { p.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b-evil" }, "ENDPOINT_DOMAIN_MISMATCH"},
+		{"continuity credential suffix", validContinuityBPlan(), func(p *ContinuityPlan) {
+			p.Authentication.Consumers[0].CredentialRef = "lcnd-secret://lcsp/continuity-b-evil/client"
+		}, "CREDENTIAL_DOMAIN_MISMATCH"},
+		{"continuity probe prefix", validContinuityBPlan(), func(p *ContinuityPlan) { p.ProbePlanRef = "lcnd://samples/network/not-continuity-b-bait" }, "PROBE_DOMAIN_MISMATCH"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			plan := test.plan
+			test.edit(&plan)
+			if !hasIssue(plan.Validate(), test.code) {
+				t.Fatalf("Validate() did not contain %s: %#v", test.code, plan.Validate())
+			}
+		})
 	}
 }
 
@@ -107,7 +136,7 @@ func TestContinuityAndApplicationSummariesUseDifferentInboundTags(t *testing.T) 
 	continuity.Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
 	continuity.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
 	continuity.Authentication.Consumers = []ConsumerCredentialRef{{ConsumerID: "lcsp-control", IdentityRef: "lcnd-identity://consumers/lcsp-control", CredentialRef: "lcnd-secret://lcsp/continuity-b/client"}}
-	continuity.ProbePlanRef = "lcnd://samples/network/continuity-b-probes.synthetic.json"
+	continuity.ProbePlanRef = "lcnd://samples/network/continuity-b/probes.synthetic.json"
 	continuity.ReceiptDomain = continuity.WorkloadID
 	continuity.RollbackDomain = continuity.WorkloadID
 	continuity.SeparateFrom = []string{"old-public-tcp-443", "lcnd-egress-cn"}
@@ -127,7 +156,7 @@ func TestContinuityPurposeRequiresNamedEgressRoute(t *testing.T) {
 	plan.Route = RouteIdentity{ID: "direct", Class: RouteDirect}
 	plan.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
 	plan.Authentication.Consumers = []ConsumerCredentialRef{{ConsumerID: "lcsp-control", IdentityRef: "lcnd-identity://consumers/lcsp-control", CredentialRef: "lcnd-secret://lcsp/continuity-b/client"}}
-	plan.ProbePlanRef = "lcnd://samples/network/continuity-b-probes.synthetic.json"
+	plan.ProbePlanRef = "lcnd://samples/network/continuity-b/probes.synthetic.json"
 	plan.ReceiptDomain = plan.WorkloadID
 	plan.RollbackDomain = plan.WorkloadID
 	plan.SeparateFrom = []string{"old-public-tcp-443", "lcnd-egress-cn"}
@@ -151,7 +180,7 @@ func TestContinuityPurposeBindsStableRouteDomain(t *testing.T) {
 	plan.Route = RouteIdentity{ID: "lcnd-egress-cn", Class: RouteChinaEgress}
 	plan.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
 	plan.Authentication.Consumers = []ConsumerCredentialRef{{ConsumerID: "lcsp-control", IdentityRef: "lcnd-identity://consumers/lcsp-control", CredentialRef: "lcnd-secret://lcsp/continuity-b/client"}}
-	plan.ProbePlanRef = "lcnd://samples/network/continuity-b-probes.synthetic.json"
+	plan.ProbePlanRef = "lcnd://samples/network/continuity-b/probes.synthetic.json"
 	plan.ReceiptDomain = plan.WorkloadID
 	plan.RollbackDomain = plan.WorkloadID
 	plan.SeparateFrom = []string{"old-public-tcp-443", "lcnd-egress-cn"}
@@ -191,7 +220,7 @@ func validContinuityPlan() ContinuityPlan {
 		FailurePolicy:        FailurePolicy{Mode: FailureApprovedDirect, ApprovedRouteID: "direct"},
 		Engine:               EngineCandidate{Name: "sing-box", Version: SingBoxVersion, CandidateSHA256: digest},
 		ProtectedTargetsRef:  "lcnd://samples/network/protected-platform.synthetic.json",
-		ProbePlanRef:         "lcnd://samples/network/egress-cn-probes.synthetic.json",
+		ProbePlanRef:         "lcnd://samples/network/egress-cn/probes.synthetic.json",
 		ReceiptDomain:        "lcnd-egress-cn",
 		RollbackDomain:       "lcnd-egress-cn",
 		SeparateFrom:         []string{"old-public-tcp-443", "lcsp-continuity-b"},
@@ -200,6 +229,21 @@ func validContinuityPlan() ContinuityPlan {
 		ProductionAuthorized: false,
 		EvidenceMode:         EvidenceSynthetic,
 	}
+}
+
+func validContinuityBPlan() ContinuityPlan {
+	plan := validContinuityPlan()
+	plan.PlanID = "lcnd-plan-20260812-continuity-b-synthetic"
+	plan.Purpose = PurposeLCSPContinuityB
+	plan.WorkloadID = "lcsp-continuity-b"
+	plan.Route = RouteIdentity{ID: "lcnd-egress-global", Class: RouteGlobalEgress}
+	plan.Endpoint.Ref = "lcnd-endpoint://loopback/continuity-b"
+	plan.Authentication.Consumers = []ConsumerCredentialRef{{ConsumerID: "lcsp-control", IdentityRef: "lcnd-identity://consumers/lcsp-control", CredentialRef: "lcnd-secret://lcsp/continuity-b/client"}}
+	plan.ProbePlanRef = "lcnd://samples/network/continuity-b/probes.synthetic.json"
+	plan.ReceiptDomain = plan.WorkloadID
+	plan.RollbackDomain = plan.WorkloadID
+	plan.SeparateFrom = []string{"old-public-tcp-443", "lcnd-egress-cn"}
+	return plan
 }
 
 func hasIssue(issues []ValidationIssue, code string) bool {

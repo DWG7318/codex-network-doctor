@@ -29,8 +29,8 @@
     "evidence_mode": {"const": "synthetic"}
   },
   "oneOf": [
-    {"properties": {"purpose": {"const": "lcsp_continuity_b"}, "workload_id": {"const": "lcsp-continuity-b"}, "route": {"$ref": "#/$defs/global_route"}, "endpoint": {"properties": {"ref": {"pattern": "/continuity-b(/|$)"}}}, "probe_plan_ref": {"pattern": "continuity-b"}, "receipt_domain": {"const": "lcsp-continuity-b"}, "rollback_domain": {"const": "lcsp-continuity-b"}}},
-    {"properties": {"purpose": {"const": "lcnd_egress_cn"}, "workload_id": {"const": "lcnd-egress-cn"}, "route": {"$ref": "#/$defs/china_route"}, "endpoint": {"properties": {"ref": {"pattern": "/egress-cn(/|$)"}}}, "probe_plan_ref": {"pattern": "egress-cn"}, "receipt_domain": {"const": "lcnd-egress-cn"}, "rollback_domain": {"const": "lcnd-egress-cn"}}}
+    {"properties": {"purpose": {"const": "lcsp_continuity_b"}, "workload_id": {"const": "lcsp-continuity-b"}, "route": {"$ref": "#/$defs/global_route"}, "endpoint": {"properties": {"ref": {"pattern": "/continuity-b(/|$)"}}}, "probe_plan_ref": {"pattern": "/continuity-b(/|$)"}, "receipt_domain": {"const": "lcsp-continuity-b"}, "rollback_domain": {"const": "lcsp-continuity-b"}}},
+    {"properties": {"purpose": {"const": "lcnd_egress_cn"}, "workload_id": {"const": "lcnd-egress-cn"}, "route": {"$ref": "#/$defs/china_route"}, "endpoint": {"properties": {"ref": {"pattern": "/egress-cn(/|$)"}}}, "probe_plan_ref": {"pattern": "/egress-cn(/|$)"}, "receipt_domain": {"const": "lcnd-egress-cn"}, "rollback_domain": {"const": "lcnd-egress-cn"}}}
   ],
   "$defs": {
     "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},

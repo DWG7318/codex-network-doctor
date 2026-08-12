@@ -135,6 +135,15 @@ func TestPrivateEgressSchemasBindRouteTuplesAndAttachmentDomains(t *testing.T) {
 	if !bytes.Contains(attachment, []byte(`"oneOf"`)) || !bytes.Contains(attachment, []byte(`egress-cn`)) || !bytes.Contains(attachment, []byte(`egress-global`)) {
 		t.Fatal("application attachment schema does not bind egress domains")
 	}
+	continuity, err := os.ReadFile(filepath.Join(root, "schemas", "network-continuity-plan.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pattern := range []string{`"probe_plan_ref": {"pattern": "/egress-cn(/|$)"}`, `"probe_plan_ref": {"pattern": "/continuity-b(/|$)"}`} {
+		if !bytes.Contains(continuity, []byte(pattern)) {
+			t.Fatalf("continuity schema lacks exact probe domain pattern %s", pattern)
+		}
+	}
 }
 
 func schemaHasRouteOneOf(value any) bool {

@@ -168,15 +168,15 @@ func (plan ContinuityPlan) Validate() []ValidationIssue {
 	if plan.Purpose == PurposeLCSPContinuityB {
 		domainSegment = "continuity-b"
 	}
-	if !strings.Contains(plan.Endpoint.Ref, "/"+domainSegment) {
+	if !referenceHasSegment(plan.Endpoint.Ref, domainSegment) {
 		issues = addIssue(issues, "ENDPOINT_DOMAIN_MISMATCH", "endpoint.ref", "endpoint belongs to another workload domain")
 	}
 	for _, consumer := range plan.Authentication.Consumers {
-		if !strings.Contains(consumer.CredentialRef, "/"+domainSegment+"/") {
+		if !referenceHasSegment(consumer.CredentialRef, domainSegment) {
 			issues = addIssue(issues, "CREDENTIAL_DOMAIN_MISMATCH", "authentication.consumers.credential_ref", "credential belongs to another workload domain")
 		}
 	}
-	if !strings.Contains(plan.ProbePlanRef, domainSegment) {
+	if !referenceHasSegment(plan.ProbePlanRef, domainSegment) {
 		issues = addIssue(issues, "PROBE_DOMAIN_MISMATCH", "probe_plan_ref", "probe plan belongs to another workload domain")
 	}
 	otherWorkload := "lcsp-continuity-b"

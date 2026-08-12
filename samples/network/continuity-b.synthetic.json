@@ -12,7 +12,7 @@
   "failure_policy": {"mode": "fail_closed"},
   "engine": {"name": "sing-box", "version": "1.13.12", "candidate_sha256": "sha256:7265a50cf0ba3069353b7958dc98d138802ad94da92c6443b070921679d8ca6b"},
   "protected_targets_ref": "lcnd://samples/network/protected-platform.synthetic.json",
-  "probe_plan_ref": "lcnd://samples/network/continuity-b-probes.synthetic.json",
+  "probe_plan_ref": "lcnd://samples/network/continuity-b/probes.synthetic.json",
   "receipt_domain": "lcsp-continuity-b",
   "rollback_domain": "lcsp-continuity-b",
   "separate_from": ["old-public-tcp-443", "lcnd-egress-cn"],

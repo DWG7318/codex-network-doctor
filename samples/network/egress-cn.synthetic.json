@@ -12,7 +12,7 @@
   "failure_policy": {"mode": "approved_direct", "approved_route_id": "direct"},
   "engine": {"name": "sing-box", "version": "1.13.12", "candidate_sha256": "sha256:c79fc11f2b88477c7850c9761dc7202ec71547d038b83acbcc8652313924ab0f"},
   "protected_targets_ref": "lcnd://samples/network/protected-platform.synthetic.json",
-  "probe_plan_ref": "lcnd://samples/network/egress-cn-probes.synthetic.json",
+  "probe_plan_ref": "lcnd://samples/network/egress-cn/probes.synthetic.json",
   "receipt_domain": "lcnd-egress-cn",
   "rollback_domain": "lcnd-egress-cn",
   "separate_from": ["old-public-tcp-443", "lcsp-continuity-b"],

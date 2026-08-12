@@ -141,6 +141,41 @@ func TestContinuityAttachmentRenderRejectsCrossDomainAndBroadSelector(t *testing
 	}
 }
 
+func TestContinuityCommandsRejectDomainSegmentBaitWithoutEcho(t *testing.T) {
+	root := t.TempDir()
+	plan := cliContinuityPlan()
+	const bait = "not-egress-cn-bait"
+	plan.ProbePlanRef = "lcnd://samples/network/" + bait
+	input := filepath.Join(root, "bait-plan.json")
+	writeCanonical(t, input, plan)
+
+	tests := []struct {
+		name   string
+		args   []string
+		output string
+	}{
+		{"validate", []string{"continuity", "validate", "--input", input, "--format", "json"}, ""},
+		{"candidate-summary", []string{"continuity", "candidate-summary", "--input", input, "--output", filepath.Join(root, "summary.json"), "--format", "json"}, filepath.Join(root, "summary.json")},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			exit := Run(context.Background(), test.args, &stdout, &stderr, "0.4.0")
+			if exit != 2 || !strings.Contains(stderr.String(), "CONTINUITY_PLAN_INVALID") {
+				t.Fatalf("exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+			}
+			if strings.Contains(stdout.String()+stderr.String(), bait) {
+				t.Fatalf("bait leaked: stdout=%q stderr=%q", stdout.String(), stderr.String())
+			}
+			if test.output != "" {
+				if _, err := os.Stat(test.output); !os.IsNotExist(err) {
+					t.Fatalf("output should not exist: %v", err)
+				}
+			}
+		})
+	}
+}
+
 func runContinuityCommand(t *testing.T, args []string) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
@@ -151,7 +186,7 @@ func runContinuityCommand(t *testing.T, args []string) {
 
 func cliContinuityPlan() networkcore.ContinuityPlan {
 	digest := "sha256:" + strings.Repeat("a", 64)
-	return networkcore.ContinuityPlan{SchemaVersion: networkcore.SchemaVersion, PlanID: "lcnd-plan-20260812-egress-cn-synthetic", Purpose: networkcore.PurposeLCNDEgressCN, TargetPlatform: "ubuntu-24.04-amd64", HostRef: "lcsp://hosts/owner-approved-primary", WorkloadID: "lcnd-egress-cn", Route: networkcore.RouteIdentity{ID: "lcnd-egress-cn", Class: networkcore.RouteChinaEgress}, Endpoint: networkcore.ServiceEndpoint{Ref: "lcnd-endpoint://loopback/egress-cn", Network: "tcp", Address: "127.0.0.1", Port: 1080, Scope: networkcore.EndpointLoopback}, Authentication: networkcore.ServiceAuthentication{Required: true, Consumers: []networkcore.ConsumerCredentialRef{{ConsumerID: "lcapi", IdentityRef: "lcnd-identity://consumers/lcapi", CredentialRef: "lcnd-secret://lcsp/egress-cn/lcapi"}}}, Timeouts: networkcore.ServiceTimeouts{ConnectMilliseconds: 3000, RequestMilliseconds: 30000, IdleMilliseconds: 60000}, FailurePolicy: networkcore.FailurePolicy{Mode: networkcore.FailureApprovedDirect, ApprovedRouteID: "direct"}, Engine: networkcore.EngineCandidate{Name: "sing-box", Version: networkcore.SingBoxVersion, CandidateSHA256: digest}, ProtectedTargetsRef: "lcnd://samples/network/protected-platform.synthetic.json", ProbePlanRef: "lcnd://samples/network/egress-cn-probes.synthetic.json", ReceiptDomain: "lcnd-egress-cn", RollbackDomain: "lcnd-egress-cn", SeparateFrom: []string{"old-public-tcp-443", "lcsp-continuity-b"}, HostImpact: networkcore.HostNetworkImpact{}, ExecutionAuthority: "lcsp_required", ProductionAuthorized: false, EvidenceMode: networkcore.EvidenceSynthetic}
+	return networkcore.ContinuityPlan{SchemaVersion: networkcore.SchemaVersion, PlanID: "lcnd-plan-20260812-egress-cn-synthetic", Purpose: networkcore.PurposeLCNDEgressCN, TargetPlatform: "ubuntu-24.04-amd64", HostRef: "lcsp://hosts/owner-approved-primary", WorkloadID: "lcnd-egress-cn", Route: networkcore.RouteIdentity{ID: "lcnd-egress-cn", Class: networkcore.RouteChinaEgress}, Endpoint: networkcore.ServiceEndpoint{Ref: "lcnd-endpoint://loopback/egress-cn", Network: "tcp", Address: "127.0.0.1", Port: 1080, Scope: networkcore.EndpointLoopback}, Authentication: networkcore.ServiceAuthentication{Required: true, Consumers: []networkcore.ConsumerCredentialRef{{ConsumerID: "lcapi", IdentityRef: "lcnd-identity://consumers/lcapi", CredentialRef: "lcnd-secret://lcsp/egress-cn/lcapi"}}}, Timeouts: networkcore.ServiceTimeouts{ConnectMilliseconds: 3000, RequestMilliseconds: 30000, IdleMilliseconds: 60000}, FailurePolicy: networkcore.FailurePolicy{Mode: networkcore.FailureApprovedDirect, ApprovedRouteID: "direct"}, Engine: networkcore.EngineCandidate{Name: "sing-box", Version: networkcore.SingBoxVersion, CandidateSHA256: digest}, ProtectedTargetsRef: "lcnd://samples/network/protected-platform.synthetic.json", ProbePlanRef: "lcnd://samples/network/egress-cn/probes.synthetic.json", ReceiptDomain: "lcnd-egress-cn", RollbackDomain: "lcnd-egress-cn", SeparateFrom: []string{"old-public-tcp-443", "lcsp-continuity-b"}, HostImpact: networkcore.HostNetworkImpact{}, ExecutionAuthority: "lcsp_required", ProductionAuthorized: false, EvidenceMode: networkcore.EvidenceSynthetic}
 }
 
 func cliApplicationAttachment() networkcore.ApplicationAttachment {

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-candidate-summary.schema.json",
+  "title": "LCnd redacted candidate summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "purpose", "workload_id", "inbound_tag", "route", "endpoint_ref", "endpoint_scope", "candidate_sha256", "evidence_mode"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "purpose": {"enum": ["lcsp_continuity_b", "lcnd_egress_cn"]},
+    "workload_id": {"$ref": "#/$defs/id"},
+    "inbound_tag": {"$ref": "#/$defs/id"},
+    "route": {"$ref": "#/$defs/route"},
+    "endpoint_ref": {"type": "string", "pattern": "^lcnd-endpoint://", "maxLength": 256},
+    "endpoint_scope": {"enum": ["loopback", "approved_private_network"]},
+    "candidate_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "evidence_mode": {"const": "synthetic"}
+  },
+  "oneOf": [
+    {"properties": {"purpose": {"const": "lcsp_continuity_b"}, "workload_id": {"const": "lcsp-continuity-b"}, "inbound_tag": {"const": "lcsp-continuity-b-in"}, "route": {"$ref": "#/$defs/global_route"}, "endpoint_ref": {"pattern": "/continuity-b(/|$)"}}},
+    {"properties": {"purpose": {"const": "lcnd_egress_cn"}, "workload_id": {"const": "lcnd-egress-cn"}, "inbound_tag": {"const": "lcnd-egress-cn-in"}, "route": {"$ref": "#/$defs/china_route"}, "endpoint_ref": {"pattern": "/egress-cn(/|$)"}}}
+  ],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "direct_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+    "china_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+    "global_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}},
+    "route": {"oneOf": [{"$ref": "#/$defs/direct_route"}, {"$ref": "#/$defs/china_route"}, {"$ref": "#/$defs/global_route"}]}
+  }
+}

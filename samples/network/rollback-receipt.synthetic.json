@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "lcnd-plan-20260812-egress-cn-synthetic",
+  "workload_id": "lcnd-egress-cn",
+  "rollback_domain": "lcnd-egress-cn",
+  "attachment_id": "lcapi-domestic-synthetic",
+  "expected_candidate_sha256": "sha256:c79fc11f2b88477c7850c9761dc7202ec71547d038b83acbcc8652313924ab0f",
+  "observed_candidate_sha256": "sha256:c79fc11f2b88477c7850c9761dc7202ec71547d038b83acbcc8652313924ab0f",
+  "rollback_armed": true,
+  "protected_targets_unchanged": true,
+  "old_line_healthy": true,
+  "triggers": [],
+  "evidence_mode": "synthetic"
+}

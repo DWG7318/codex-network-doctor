@@ -132,7 +132,7 @@ Use these public, non-secret fields for `network-continuity-plan.schema.json` an
     }
   ],
   "protected_targets_ref": "lcnd://samples/network/protected-platform.synthetic.json",
-  "probe_plan_ref": "lcnd://samples/network/continuity-b-probes.synthetic.json",
+  "probe_plan_ref": "lcnd://samples/network/continuity-b/probes.synthetic.json",
   "rollback_domain": "lcsp-continuity-b",
   "execution_authority": "lcsp_required",
   "production_authorized": false

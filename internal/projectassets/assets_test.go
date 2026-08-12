@@ -27,12 +27,48 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 		"docs/VERSIONING.md",
 		"internal/casebook/cases/CND-CASE-2026-001.md",
 		"docs/RFC/0001-evidence-package.md",
+		"docs/RFC/0003-ubuntu-network-core.md",
+		"docs/RFC/0004-lcnd-continuity-b-contract.md",
 		"docs/ADR/0001-use-osquery-as-optional-core-provider.md",
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
 		"schemas/collector-catalog.schema.json",
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
+		"schemas/network-continuity-plan.schema.json",
+		"schemas/network-secret-ref.schema.json",
+		"schemas/network-probe-plan.schema.json",
+		"schemas/network-probe-evidence.schema.json",
+		"schemas/network-probe-evaluation.schema.json",
+		"schemas/network-protected-targets.schema.json",
+		"schemas/network-guard-result.schema.json",
+		"schemas/network-candidate-summary.schema.json",
+		"schemas/network-application-attachment.schema.json",
+		"schemas/network-rollback-receipt.schema.json",
+		"schemas/network-rollback-decision.schema.json",
+		"samples/network/node-china-egress.synthetic.json",
+		"samples/network/node-global-egress.synthetic.json",
+		"samples/network/targets-domestic.synthetic.json",
+		"samples/network/targets-global.synthetic.json",
+		"samples/network/protected-management.synthetic.json",
+		"samples/network/profile-overseas-host.synthetic.json",
+		"samples/network/profile-domestic-host.synthetic.json",
+		"samples/network/continuity-b.synthetic.json",
+		"samples/network/continuity-b-probes.synthetic.json",
+		"samples/network/egress-cn.synthetic.json",
+		"samples/network/egress-cn-probes.synthetic.json",
+		"samples/network/protected-platform.synthetic.json",
+		"samples/network/secret-ref-egress-cn.synthetic.json",
+		"samples/network/lcapi-egress-attachment.synthetic.json",
+		"samples/network/lcapi-global-egress-attachment.synthetic.json",
+		"samples/network/rollback-receipt.synthetic.json",
 		"scripts/bootstrap-osquery.ps1",
 		"scripts/build.ps1",
+		"scripts/build-linux.ps1",
 		".github/CODEOWNERS",
 	}
 	for _, relativePath := range required {
@@ -48,6 +84,23 @@ func TestJSONSchemasAreValidJSON(t *testing.T) {
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
 		"schemas/collector-catalog.schema.json",
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
+		"schemas/network-continuity-plan.schema.json",
+		"schemas/network-secret-ref.schema.json",
+		"schemas/network-probe-plan.schema.json",
+		"schemas/network-probe-evidence.schema.json",
+		"schemas/network-probe-evaluation.schema.json",
+		"schemas/network-protected-targets.schema.json",
+		"schemas/network-guard-result.schema.json",
+		"schemas/network-candidate-summary.schema.json",
+		"schemas/network-application-attachment.schema.json",
+		"schemas/network-rollback-receipt.schema.json",
+		"schemas/network-rollback-decision.schema.json",
 	} {
 		t.Run(relativePath, func(t *testing.T) {
 			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relativePath)))
@@ -60,6 +113,43 @@ func TestJSONSchemasAreValidJSON(t *testing.T) {
 			}
 			if document["$schema"] != "https://json-schema.org/draft/2020-12/schema" {
 				t.Fatalf("$schema = %v", document["$schema"])
+			}
+		})
+	}
+}
+
+func TestNetworkJSONSchemasRejectAdditionalProperties(t *testing.T) {
+	root := repositoryRoot(t)
+	for _, relativePath := range []string{
+		"schemas/network-node.schema.json",
+		"schemas/network-target-set.schema.json",
+		"schemas/network-route-profile.schema.json",
+		"schemas/network-change-plan.schema.json",
+		"schemas/network-execution-receipt.schema.json",
+		"schemas/network-health-report.schema.json",
+		"schemas/network-continuity-plan.schema.json",
+		"schemas/network-secret-ref.schema.json",
+		"schemas/network-probe-plan.schema.json",
+		"schemas/network-probe-evidence.schema.json",
+		"schemas/network-probe-evaluation.schema.json",
+		"schemas/network-protected-targets.schema.json",
+		"schemas/network-guard-result.schema.json",
+		"schemas/network-candidate-summary.schema.json",
+		"schemas/network-application-attachment.schema.json",
+		"schemas/network-rollback-receipt.schema.json",
+		"schemas/network-rollback-decision.schema.json",
+	} {
+		t.Run(relativePath, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relativePath)))
+			if err != nil {
+				t.Fatalf("ReadFile() error = %v", err)
+			}
+			var schema map[string]any
+			if err := json.Unmarshal(data, &schema); err != nil {
+				t.Fatalf("schema JSON error = %v", err)
+			}
+			if schema["additionalProperties"] != false {
+				t.Fatalf("additionalProperties = %v", schema["additionalProperties"])
 			}
 		})
 	}
@@ -92,17 +182,40 @@ func TestBootstrapPinsVerifiedOsqueryWithoutInstallingService(t *testing.T) {
 }
 
 func TestBuildScriptConfiguresWindowsRaceToolchain(t *testing.T) {
-	scriptPath := filepath.Join(repositoryRoot(t), "scripts", "build.ps1")
-	data, err := os.ReadFile(scriptPath)
-	if err != nil {
-		t.Fatalf("ReadFile() error = %v", err)
-	}
-	script := string(data)
+	script := readAsset(t, "scripts/build.ps1")
 	for _, required := range []string{"CGO_ENABLED", "mingw64", "CC", "test -race"} {
 		if !strings.Contains(script, required) {
 			t.Errorf("build script missing race toolchain configuration %q", required)
 		}
 	}
+	for _, required := range []string{"cmd\\cnd-network", "cnd-network.exe"} {
+		if !strings.Contains(script, required) {
+			t.Errorf("build script missing network CLI output %q", required)
+		}
+	}
+}
+
+func TestLinuxBuildScriptCrossCompilesOnlyNetworkCLI(t *testing.T) {
+	script := readAsset(t, "scripts/build-linux.ps1")
+	for _, required := range []string{"GOOS", "linux", "GOARCH", "amd64", "CGO_ENABLED", "cmd\\cnd-network"} {
+		if !strings.Contains(script, required) {
+			t.Errorf("linux build script missing %q", required)
+		}
+	}
+	for _, forbidden := range []string{"docker", "systemctl", "sudo", "apt install", "sing-box install"} {
+		if strings.Contains(strings.ToLower(script), forbidden) {
+			t.Errorf("linux build script contains side-effect primitive %q", forbidden)
+		}
+	}
+}
+
+func readAsset(t *testing.T, relativePath string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(repositoryRoot(t), filepath.FromSlash(relativePath)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(data)
 }
 
 func repositoryRoot(t *testing.T) string {

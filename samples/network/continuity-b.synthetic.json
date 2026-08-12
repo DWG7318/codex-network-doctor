@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "lcnd-plan-20260812-continuity-b-synthetic",
+  "purpose": "lcsp_continuity_b",
+  "target_platform": "ubuntu-24.04-amd64",
+  "host_ref": "lcsp://hosts/owner-approved-primary",
+  "workload_id": "lcsp-continuity-b",
+  "route": {"id": "lcnd-egress-global", "class": "global_egress"},
+  "endpoint": {"ref": "lcnd-endpoint://loopback/continuity-b", "network": "tcp", "address": "127.0.0.1", "port": 1090, "scope": "loopback"},
+  "authentication": {"required": true, "allow_anonymous": false, "consumers": [{"consumer_id": "lcsp-control", "identity_ref": "lcnd-identity://consumers/lcsp-control", "credential_ref": "lcnd-secret://lcsp/continuity-b/client"}]},
+  "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000},
+  "failure_policy": {"mode": "fail_closed"},
+  "engine": {"name": "sing-box", "version": "1.13.12", "candidate_sha256": "sha256:7265a50cf0ba3069353b7958dc98d138802ad94da92c6443b070921679d8ca6b"},
+  "protected_targets_ref": "lcnd://samples/network/protected-platform.synthetic.json",
+  "probe_plan_ref": "lcnd://samples/network/continuity-b/probes.synthetic.json",
+  "receipt_domain": "lcsp-continuity-b",
+  "rollback_domain": "lcsp-continuity-b",
+  "separate_from": ["old-public-tcp-443", "lcnd-egress-cn"],
+  "host_impact": {"default_route": false, "global_dns": false, "hosts_file": false, "firewall": false, "system_proxy": false, "tailnet_preferences": false, "whole_host_tun": false},
+  "execution_authority": "lcsp_required",
+  "production_authorized": false,
+  "evidence_mode": "synthetic"
+}

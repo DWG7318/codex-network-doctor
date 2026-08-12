@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "target_set_id": "protected-platform",
+  "evidence_mode": "synthetic",
+  "targets": [
+    {"id": "old-public-tcp-443-owner", "kind": "tcp_listener", "address": "0.0.0.0", "port": 443, "protocol": "tcp"},
+    {"id": "ssh-tcp-22", "kind": "tcp_listener", "address": "0.0.0.0", "port": 22, "protocol": "tcp"},
+    {"id": "http-tcp-80", "kind": "tcp_listener", "address": "0.0.0.0", "port": 80, "protocol": "tcp"},
+    {"id": "udp-443", "kind": "udp_listener", "address": "0.0.0.0", "port": 443, "protocol": "udp"},
+    {"id": "lcsp-access-loopback-18082", "kind": "tcp_listener", "address": "127.0.0.1", "port": 18082, "protocol": "tcp"},
+    {"id": "lcapi-loopback-18080", "kind": "tcp_listener", "address": "127.0.0.1", "port": 18080, "protocol": "tcp"},
+    {"id": "lcgpu-gateway-loopback-18081", "kind": "tcp_listener", "address": "127.0.0.1", "port": 18081, "protocol": "tcp"},
+    {"id": "owner-console-loopback-19982", "kind": "tcp_listener", "address": "127.0.0.1", "port": 19982, "protocol": "tcp"},
+    {"id": "old-haproxy-config-fingerprint", "kind": "read_only_fingerprint"},
+    {"id": "old-caddy-service-fingerprint", "kind": "read_only_fingerprint"},
+    {"id": "old-xray-service-fingerprint", "kind": "read_only_fingerprint"},
+    {"id": "old-client-node-config-fingerprint", "kind": "read_only_fingerprint"},
+    {"id": "tailnet-existing-preferences", "kind": "read_only_fingerprint"},
+    {"id": "system-default-route", "kind": "read_only_fingerprint"},
+    {"id": "system-global-dns", "kind": "read_only_fingerprint"},
+    {"id": "system-firewall-rules", "kind": "read_only_fingerprint"},
+    {"id": "system-proxy", "kind": "read_only_fingerprint"}
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-application-attachment.schema.json",
+  "title": "LCapi-compatible application egress attachment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "attachment_id", "consumer_id", "consumer_identity_ref", "selectors", "route", "endpoint_ref", "credential_ref", "timeouts", "failure_policy", "business_probe_ref", "rollback", "production_authorized"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "attachment_id": {"$ref": "#/$defs/id"},
+    "consumer_id": {"$ref": "#/$defs/id"},
+    "consumer_identity_ref": {"type": "string", "pattern": "^lcnd-identity://consumers/", "maxLength": 256},
+    "selectors": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "minProperties": 1, "properties": {"provider": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^(?![Aa][Ll][Ll]$|[Aa][Nn][Yy]$|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]$)[A-Za-z0-9][A-Za-z0-9._:/-]*$"}, "model": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?![Aa][Ll][Ll]$|[Aa][Nn][Yy]$|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]$)[A-Za-z0-9][A-Za-z0-9._:/-]*$"}, "channel": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^(?![Aa][Ll][Ll]$|[Aa][Nn][Yy]$|[Dd][Ee][Ff][Aa][Uu][Ll][Tt]$)[A-Za-z0-9][A-Za-z0-9._:/-]*$"}, "target_set_ref": {"type": "string", "pattern": "^lcnd-targets://", "maxLength": 256}}}},
+    "route": {"$ref": "#/$defs/egress_route"},
+    "endpoint_ref": {"type": "string", "pattern": "^lcnd-endpoint://", "maxLength": 256},
+    "credential_ref": {"type": "string", "pattern": "^lcnd-secret://[a-z0-9][a-z0-9/_-]{1,127}$"},
+    "timeouts": {"$ref": "#/$defs/timeouts"},
+    "failure_policy": {"type": "object", "additionalProperties": false, "required": ["mode"], "properties": {"mode": {"enum": ["fail_closed", "approved_direct", "pause_business"]}, "approved_route_id": {"const": "direct"}}},
+    "business_probe_ref": {"type": "string", "pattern": "^lcnd-probe://", "maxLength": 256},
+    "rollback": {"type": "object", "additionalProperties": false, "required": ["detach_only", "restore_route_id"], "properties": {"detach_only": {"const": true}, "restore_route_id": {"const": "direct"}}},
+    "production_authorized": {"const": false}
+  },
+  "allOf": [
+    {"oneOf": [
+      {"properties": {"route": {"$ref": "#/$defs/china_route"}, "endpoint_ref": {"pattern": "^lcnd-endpoint://[^/]+/egress-cn(/|$)"}, "credential_ref": {"pattern": "^lcnd-secret://[^/]+/egress-cn/"}, "business_probe_ref": {"pattern": "^lcnd-probe://[^/]+/egress-cn/"}}},
+      {"properties": {"route": {"$ref": "#/$defs/global_route"}, "endpoint_ref": {"pattern": "^lcnd-endpoint://[^/]+/egress-global(/|$)"}, "credential_ref": {"pattern": "^lcnd-secret://[^/]+/egress-global/"}, "business_probe_ref": {"pattern": "^lcnd-probe://[^/]+/egress-global/"}}}
+    ]},
+    {"oneOf": [
+      {"properties": {"consumer_id": {"const": "lcapi"}, "consumer_identity_ref": {"const": "lcnd-identity://consumers/lcapi"}}},
+      {"properties": {"consumer_id": {"not": {"const": "lcapi"}}}}
+    ]}
+  ],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "china_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+    "global_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}},
+    "egress_route": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}}
+    ]},
+    "timeouts": {"type": "object", "additionalProperties": false, "required": ["connect_ms", "request_ms", "idle_ms"], "properties": {"connect_ms": {"type": "integer", "minimum": 100, "maximum": 60000}, "request_ms": {"type": "integer", "minimum": 100, "maximum": 120000}, "idle_ms": {"type": "integer", "minimum": 100, "maximum": 300000}}}
+  }
+}

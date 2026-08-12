@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-route-profile.schema.json",
+  "title": "LCnd Network Route Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "name", "node_id", "target_set_id", "protected_target_set_id"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "profile_id": {"$ref": "#/$defs/id"},
+    "name": {"enum": ["domestic_direct_global_tunnel", "global_direct_domestic_tunnel"]},
+    "node_id": {"$ref": "#/$defs/id"},
+    "target_set_id": {"$ref": "#/$defs/id"},
+    "protected_target_set_id": {"$ref": "#/$defs/id"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"}
+  }
+}

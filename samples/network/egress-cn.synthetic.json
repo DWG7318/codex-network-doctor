@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "lcnd-plan-20260812-egress-cn-synthetic",
+  "purpose": "lcnd_egress_cn",
+  "target_platform": "ubuntu-24.04-amd64",
+  "host_ref": "lcsp://hosts/owner-approved-primary",
+  "workload_id": "lcnd-egress-cn",
+  "route": {"id": "lcnd-egress-cn", "class": "china_egress"},
+  "endpoint": {"ref": "lcnd-endpoint://loopback/egress-cn", "network": "tcp", "address": "127.0.0.1", "port": 1080, "scope": "loopback"},
+  "authentication": {"required": true, "allow_anonymous": false, "consumers": [{"consumer_id": "lcapi", "identity_ref": "lcnd-identity://consumers/lcapi", "credential_ref": "lcnd-secret://lcsp/egress-cn/lcapi"}]},
+  "timeouts": {"connect_ms": 3000, "request_ms": 30000, "idle_ms": 60000},
+  "failure_policy": {"mode": "approved_direct", "approved_route_id": "direct"},
+  "engine": {"name": "sing-box", "version": "1.13.12", "candidate_sha256": "sha256:c79fc11f2b88477c7850c9761dc7202ec71547d038b83acbcc8652313924ab0f"},
+  "protected_targets_ref": "lcnd://samples/network/protected-platform.synthetic.json",
+  "probe_plan_ref": "lcnd://samples/network/egress-cn/probes.synthetic.json",
+  "receipt_domain": "lcnd-egress-cn",
+  "rollback_domain": "lcnd-egress-cn",
+  "separate_from": ["old-public-tcp-443", "lcsp-continuity-b"],
+  "host_impact": {"default_route": false, "global_dns": false, "hosts_file": false, "firewall": false, "system_proxy": false, "tailnet_preferences": false, "whole_host_tun": false},
+  "execution_authority": "lcsp_required",
+  "production_authorized": false,
+  "evidence_mode": "synthetic"
+}

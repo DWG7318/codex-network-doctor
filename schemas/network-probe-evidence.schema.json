@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-probe-evidence.schema.json",
+  "title": "LCnd synthetic probe evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "workload_id", "evidence_mode", "results"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "workload_id": {"$ref": "#/$defs/id"},
+    "evidence_mode": {"const": "synthetic"},
+    "results": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/result"}}
+  },
+  "oneOf": [
+    {"properties": {"workload_id": {"const": "lcsp-continuity-b"}, "results": {"items": {"$ref": "#/$defs/continuity_result"}}}},
+    {"properties": {"workload_id": {"const": "lcnd-egress-cn"}, "results": {"items": {"$ref": "#/$defs/application_result"}}}}
+  ],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"},
+    "probe_class": {"enum": ["direct_control_probe", "direct_application_probe", "egress_continuity_probe", "egress_application_probe", "protected_target_probe", "rollback_probe", "secret_leak_probe"]},
+    "route": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+      {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}}
+    ]},
+    "direct_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "direct"}, "class": {"const": "direct"}}},
+    "china_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-cn"}, "class": {"const": "china_egress"}}},
+    "global_route": {"type": "object", "additionalProperties": false, "required": ["id", "class"], "properties": {"id": {"const": "lcnd-egress-global"}, "class": {"const": "global_egress"}}},
+    "result": {"type": "object", "additionalProperties": false, "required": ["probe_id", "class", "route", "attempted", "succeeded", "status_class", "endpoint_identity"], "properties": {"probe_id": {"$ref": "#/$defs/id"}, "class": {"$ref": "#/$defs/probe_class"}, "route": {"$ref": "#/$defs/route"}, "attempted": {"type": "integer", "minimum": 0, "maximum": 10}, "succeeded": {"type": "integer", "minimum": 0, "maximum": 10}, "status_class": {"enum": ["success", "failure", "timeout"]}, "endpoint_identity": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}},
+    "application_result": {"oneOf": [
+      {"properties": {"class": {"const": "direct_application_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "egress_application_probe"}, "route": {"$ref": "#/$defs/china_route"}}},
+      {"properties": {"class": {"const": "protected_target_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "rollback_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "secret_leak_probe"}, "route": {"$ref": "#/$defs/china_route"}}}
+    ]},
+    "continuity_result": {"oneOf": [
+      {"properties": {"class": {"const": "direct_control_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "egress_continuity_probe"}, "route": {"$ref": "#/$defs/global_route"}}},
+      {"properties": {"class": {"const": "protected_target_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "rollback_probe"}, "route": {"$ref": "#/$defs/direct_route"}}},
+      {"properties": {"class": {"const": "secret_leak_probe"}, "route": {"$ref": "#/$defs/global_route"}}}
+    ]}
+  }
+}

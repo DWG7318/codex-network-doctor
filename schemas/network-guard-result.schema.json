@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cnd/schemas/network-guard-result.schema.json",
+  "title": "LCnd read-only guard result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "workload_id", "status", "codes", "evidence_mode", "read_only"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "plan_id": {"$ref": "#/$defs/id"},
+    "workload_id": {"$ref": "#/$defs/id"},
+    "status": {"enum": ["GUARD_PASS", "GUARD_BLOCKED"]},
+    "codes": {"type": "array", "maxItems": 64, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z0-9_]+$", "maxLength": 64}},
+    "evidence_mode": {"const": "synthetic"},
+    "read_only": {"const": true}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{1,63}$"}}
+}

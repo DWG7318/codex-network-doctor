@@ -18,6 +18,74 @@ Codex Network Doctor 的 `cnd.exe` 是一个 Windows 网络证据采集器。它
 - 固定目录顺序、ZIP 时间戳和权限位，保证相同暂存内容得到相同 ZIP 字节。
 - 独立的 `validate` 命令检查路径安全、重复条目、必需文件、大小和 SHA-256。
 
+## 应用级私有出站合同（v0.4.0）
+
+`cnd-network` 现在发布一套可供未来 LCSP 托管、供 LCapi 按 Provider/模型消费的应用级私有
+出站合同与离线工具链。它只生成和评估非秘密 JSON 工件，不连接服务器、不安装网络引擎、不修改
+LCSP/LCapi/LCgpu，也不执行生产部署。
+
+三类稳定线路身份由同一模型表达：`direct`、`lcnd-egress-cn` 和 `lcnd-egress-global`。新服务只能
+监听 loopback 或带 `lcsp-network://` 批准引用的私网；公网监听、匿名访问、默认路由、全局
+DNS/hosts、防火墙、系统代理、Tailnet 和整机 TUN 变化一律失败关闭。
+
+```powershell
+.\bin\cnd-network.exe continuity validate `
+  --input .\samples\network\egress-cn.synthetic.json
+
+.\bin\cnd-network.exe continuity candidate-summary `
+  --input .\samples\network\egress-cn.synthetic.json `
+  --output .\out\egress-cn-summary.json
+
+.\bin\cnd-network.exe continuity probe-plan `
+  --input .\samples\network\egress-cn.synthetic.json `
+  --output .\out\egress-cn-probes.json
+
+.\bin\cnd-network.exe continuity attachment-render `
+  --input .\samples\network\lcapi-egress-attachment.synthetic.json `
+  --output .\out\lcapi-egress-attachment.json
+```
+
+还提供 `evaluate`、`guard-check` 和 `rollback-evaluate`。所有输入严格拒绝未知字段并限制为 1 MiB；
+所有输出使用确定性 JSON 与 `O_EXCL`，不会覆盖已有文件。Probe 与回滚样例固定为
+`evidence_mode=synthetic`；样本不足输出 `INSUFFICIENT_EVIDENCE`，不能解释为真实 Ubuntu、真实节点、
+真实 LCapi 请求或生产健康。
+
+`lcsp-continuity-b` 与 `lcnd-egress-cn` 的 workload、endpoint、credential/secret、probe、receipt、
+rollback 和 inbound tag 必须全部分离。旧公网 TCP/443/HAProxy→Caddy/Xray/客户端线路是永久保护
+目标，本版本没有触碰或验证它。
+
+仓库实现完成不等于 LCSP 接入完成，不等于 LCapi 接入完成，也不等于生产验收完成。详细合同见
+[RFC 0004](docs/RFC/0004-lcnd-continuity-b-contract.md)。
+
+## Ubuntu 网络规划与模拟（v0.3.0）
+
+`cnd-network` 是与 `cnd.exe`、Windows 修复器和网速检测器相互隔离的 Ubuntu 网络规划 CLI。
+当前版本面向 Ubuntu 24.04 amd64，只实现严格校验、双向分流规划、sing-box 候选配置渲染和
+合成执行模拟，不执行真实服务器网络变更。
+
+两种方向使用同一套底层模型：
+
+- `global_direct_domestic_tunnel`：海外主机默认直连，指定国内目标经中国出口节点。
+- `domestic_direct_global_tunnel`：国内主机默认直连，指定国外目标经全球出口节点。
+- 管理网段作为受保护目标始终直连；它与隧道目标重叠时规划失败。
+
+目标引擎固定为 sing-box `1.13.12`，但仓库不捆绑、不下载也不安装 sing-box。仓库中的节点、
+目标集和路由 Profile 样例全部是合成数据；模拟回执与健康报告固定使用
+`evidence_mode=synthetic`，不能当作真实服务器健康结论。
+
+```powershell
+.\bin\cnd-network.exe version
+.\bin\cnd-network.exe validate --kind node --input .\samples\network\node-china-egress.synthetic.json
+.\scripts\build-linux.ps1
+```
+
+命令面包括 `validate`、`plan`、`render`、`simulate` 和 `report`。`render` 读取的节点材料以及生成的
+sing-box candidate 都是敏感资产：candidate 只能写入新文件，不得输出到终端或提交到 Git；
+最终 plan 只保存 `secret_ref` 与 candidate SHA-256。
+
+LCSP 对接、真实节点、sudo/systemd 代办和生产路由执行均留待后续版本。详细状态机、文件合同、
+退出码和不兼容行为见 [RFC 0003](docs/RFC/0003-ubuntu-network-core.md)。
+
 ## 双击离线采集
 
 把 `cnd.exe` 复制到故障电脑，然后直接双击：
@@ -187,6 +255,8 @@ logs/
 - [系统设计](docs/SDD.md)
 - [Collector Catalog](docs/COLLECTOR_CATALOG.md)
 - [Evidence ZIP RFC](docs/RFC/0001-evidence-package.md)
+- [Ubuntu 网络核心 RFC](docs/RFC/0003-ubuntu-network-core.md)
+- [应用级私有出站 RFC](docs/RFC/0004-lcnd-continuity-b-contract.md)
 - [开源工具评估](docs/OPEN_SOURCE_EVALUATION.md)
 - [测试手册](docs/TEST_HANDBOOK.md)
 - [Backlog](docs/BACKLOG.md)

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "samples": 3,
+  "timeout_ms": 3000,
+  "targets": [
+    {"id": "approved-health-endpoint", "url": "https://example.invalid/health", "expected_status": 200}
+  ],
+  "routes": [{"id": "direct"}]
+}

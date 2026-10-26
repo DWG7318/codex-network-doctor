@@ -108,6 +108,16 @@ rollback 和 inbound tag 隔离。旧公网 TCP/443/HAProxy→Caddy/Xray/客户�
 
 ## 3. 数据状态
 
+### Ubuntu Live Health (v0.5.0)
+
+`internal/networkhealth` 独立拥有严格输入、Linux固定只读事实、真实串行探针、分路径评价与中文报告。
+`internal/networkcli/diagnose.go` 只在显式`diagnose`入口调用它；其余离线命令不增加网络副作用。
+`DNS -> TCP -> TLS -> HTTPS HEAD` 每轮共享截止时间，额外总预算120秒；HEAD不跟随重定向或读取正文。
+direct忽略环境代理；proxy使用明确私网IP端点，目标DNS标记不可观测，不静默回退。
+主机文件最大64KiB，输入最大1MiB，响应头最大32KiB；两个报告在网络操作前独占创建。
+真实报告独立于synthetic schema，成功率以可观测适用层为分母，blocked下游不算成功；完整失败有评分，
+缺失/取消证据score=null。主机观察完整性与路径分数独立呈现。详见RFC 0005。
+
 ```mermaid
 stateDiagram-v2
     [*] --> Collecting
@@ -170,7 +180,8 @@ stateDiagram-v2
 - 当前没有内建加密、数字签名、GUI、EventLog 时间线或 WFP/ETW 持续捕获。
 - ZIP 构建当前按文件读取到内存；超大事件日志应由未来流式 Artifact 类型实现。
 - Ubuntu Network Core 当前只支持 `ubuntu-24.04` / `amd64` 目标和 sing-box `1.13.12` 配置形状。
-- 当前健康报告只基于 `evidence_mode=synthetic`；真实链路探测、LCSP 适配和生产执行均未实现。
+- 旧工作流健康报告仍为 `evidence_mode=synthetic`；v0.5.0独立`diagnose`报告使用live证据。
+  LCSP适配和生产执行仍未实现，Ubuntu吞吐测速/逐跳定位未包含。
 - v0.4.0 只发布 LCapi 消费合同，没有修改或验证 LCapi；没有完成 LCSP 托管、秘密注入、真实回执、
   真实节点、真实业务 probe 或生产验收。
 - 仓库实现完成不等于 LCSP 接入完成，不等于 LCapi 接入完成，也不等于生产验收完成。

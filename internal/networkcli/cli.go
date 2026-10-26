@@ -58,6 +58,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version s
 		return runReport(args[1:], stdout, stderr)
 	case "continuity":
 		return runContinuity(args[1:], stdout, stderr)
+	case "diagnose":
+		return runDiagnose(ctx, args[1:], stdout, stderr, version)
 	case "help", "--help", "-h":
 		printUsage(stdout)
 		return 0
@@ -693,5 +695,5 @@ func printError(output io.Writer, code string) {
 }
 
 func printUsage(output io.Writer) {
-	_, _ = io.WriteString(output, "usage: cnd-network <version|validate|plan|render|simulate|report|continuity> [options]\n")
+	_, _ = io.WriteString(output, "usage: cnd-network <version|validate|plan|render|simulate|report|continuity|diagnose> [options]\n")
 }

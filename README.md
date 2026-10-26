@@ -18,10 +18,24 @@ Codex Network Doctor 的 `cnd.exe` 是一个 Windows 网络证据采集器。它
 - 固定目录顺序、ZIP 时间戳和权限位，保证相同暂存内容得到相同 ZIP 字节。
 - 独立的 `validate` 命令检查路径安全、重复条目、必需文件、大小和 SHA-256。
 
-## 应用级私有出站合同（v0.4.0）
+## Ubuntu 24.04 真实网络健康检测（v0.5.0）
 
-`cnd-network` 现在发布一套可供未来 LCSP 托管、供 LCapi 按 Provider/模型消费的应用级私有
-出站合同与离线工具链。它只生成和评估非秘密 JSON 工件，不连接服务器、不安装网络引擎、不修改
+Linux amd64 的 `cnd-network diagnose` 读取本机接口、DNS与路由快照，向显式指定的HTTPS端点
+进行串行DNS/TCP/TLS/HEAD检测，并输出JSON与中文报告。可对比明确配置的已有私网HTTP/SOCKS5代理。
+
+```bash
+./cnd-network diagnose --input targets.json --output health.json --text-output health.txt
+```
+
+请先按[Ubuntu使用说明](docs/UBUNTU_NETWORK_HEALTH.md)填写批准的真实目标；示例`example.invalid`
+仅用于展示格式。报告为`evidence_mode=live`，评分仅代表所选目标/路径的检查成功率，不能视为全网健康或故障根因。
+程序不改VPN、DNS、路由或服务，不部署出口，也不与LCSP对接。带宽测速、修复与本命令保持分离。
+原有simulation/continuity命令仍只接受synthetic证据。报告包含敏感本机事实，不得提交到公开Git。
+
+## 应用级私有出站合同（v0.4.0 基础能力）
+
+`cnd-network` 保留一套可供未来 LCSP 托管、供 LCapi 按 Provider/模型消费的应用级私有
+出站合同与离线工具链。这些离线命令只生成和评估非秘密 JSON 工件，不连接服务器、不安装网络引擎、不修改
 LCSP/LCapi/LCgpu，也不执行生产部署。
 
 三类稳定线路身份由同一模型表达：`direct`、`lcnd-egress-cn` 和 `lcnd-egress-global`。新服务只能

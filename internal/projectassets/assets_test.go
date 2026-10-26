@@ -29,6 +29,11 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 		"docs/RFC/0001-evidence-package.md",
 		"docs/RFC/0003-ubuntu-network-core.md",
 		"docs/RFC/0004-lcnd-continuity-b-contract.md",
+		"docs/RFC/0005-ubuntu-live-health.md",
+		"docs/UBUNTU_NETWORK_HEALTH.md",
+		"schemas/network-live-targets.schema.json",
+		"schemas/network-live-health-report.schema.json",
+		"samples/network/live-targets.example.json",
 		"docs/ADR/0001-use-osquery-as-optional-core-provider.md",
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
@@ -81,6 +86,8 @@ func TestRequiredEngineeringAssetsExist(t *testing.T) {
 func TestJSONSchemasAreValidJSON(t *testing.T) {
 	root := repositoryRoot(t)
 	for _, relativePath := range []string{
+		"schemas/network-live-targets.schema.json",
+		"schemas/network-live-health-report.schema.json",
 		"schemas/manifest.schema.json",
 		"schemas/timeline.schema.json",
 		"schemas/collector-catalog.schema.json",
@@ -121,6 +128,8 @@ func TestJSONSchemasAreValidJSON(t *testing.T) {
 func TestNetworkJSONSchemasRejectAdditionalProperties(t *testing.T) {
 	root := repositoryRoot(t)
 	for _, relativePath := range []string{
+		"schemas/network-live-targets.schema.json",
+		"schemas/network-live-health-report.schema.json",
 		"schemas/network-node.schema.json",
 		"schemas/network-target-set.schema.json",
 		"schemas/network-route-profile.schema.json",

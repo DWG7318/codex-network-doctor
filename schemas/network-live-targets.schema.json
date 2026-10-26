@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LCnd explicit live health input v1",
+  "description": "Go validator additionally enforces unique IDs, HTTPS URLs without userinfo/query/fragment, explicit private-IP proxy ports, direct route presence and <=120000ms cumulative budget.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "samples": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 5
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 10000
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://",
+            "maxLength": 2048
+          },
+          "expected_status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 299
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "expected_status"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "enum": [
+              "direct",
+              "lcnd-egress-cn",
+              "lcnd-egress-global"
+            ]
+          },
+          "proxy_url": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "id": {
+                  "const": "direct"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "proxy_url": {
+                  "const": ""
+                }
+              }
+            },
+            "else": {
+              "required": [
+                "proxy_url"
+              ],
+              "properties": {
+                "proxy_url": {
+                  "pattern": "^(http|socks5h?)://"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 3
+    }
+  },
+  "required": [
+    "schema_version",
+    "samples",
+    "timeout_ms",
+    "targets",
+    "routes"
+  ]
+}

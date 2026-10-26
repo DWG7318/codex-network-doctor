@@ -37,7 +37,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps
 - 管理目标必须直连；与隧道目标发生域名、协议、端口或 CIDR 重叠时规划失败。
 - sing-box candidate 允许包含受保护材料，但必须以新文件创建；最终 plan、摘要、回执、报告和错误不得泄漏材料。
 - `simulate` 成功只产生 `VERIFIED`，验证失败或超时只产生 `ROLLED_BACK`。
-- 所有网络报告必须使用 `evidence_mode=synthetic`，状态只能是 `SIMULATED_PASS` 或 `SIMULATED_ROLLBACK`。
+- 既有simulate/report报告必须使用 `evidence_mode=synthetic`，状态只能是 `SIMULATED_PASS` 或 `SIMULATED_ROLLBACK`。
 - `cnd-network` 不得包含或执行 sudo、systemd、路由写入、服务安装和任意生产命令。
 - continuity service endpoint 只能是 loopback 或带批准引用的私网；公网地址、TCP 22/80/443、匿名
   consumer 和任何宿主网络影响声明必须拒绝。
@@ -65,6 +65,16 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-linux.ps
   `O_EXCL`，错误、stdout、样例与报告不回显原始输入或秘密。
 - continuity CLI 不得导入 `os/exec` 或调用 sudo、systemd、ip、nft、iptables、route、resolvectl、
   tailscale、docker、ssh、curl、wget，也不得修改宿主网络。
+
+## Ubuntu live health (v0.5.0)
+
+- `go test ./internal/networkhealth ./internal/networkcli` 使用短生命周期localhost TLS/HTTP/SOCKS5测试服务。
+- 验证真实HEAD、系统证书验证、重定向不跟随、环境代理不继承、失败代理不回退、deadline/取消、路径分数与证据不足。
+- Linux额外验证接口读取、OS检测、固定文件长度限制与权限失败处理。
+- `diagnose`仅显式输入真实目标；公共样例为example.invalid，不运行默认外网探测。
+- 真实报告保留在Git之外的私有Linux目录（支持Linux权限时也可用ignored `out/`），检查`evidence_mode=live`、scope、0600权限、JSON schema和稳定退出码；不提交原始报告。WSL的Windows挂载盘若不落实0600必须在采集前被拒绝。
+- 覆盖全部既有synthetic命令、Windows修复/采集/测速回归，禁止将live输入送入旧synthetic evaluator。
+- 0表示目标通过且主机完整/平台受支持；3也可以是成功生成的故障报告，不等同于执行器崩溃。
 
 ## Windows smoke tests
 

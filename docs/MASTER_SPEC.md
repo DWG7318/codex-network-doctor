@@ -1,8 +1,8 @@
 # Codex Network Doctor MasterSpec
 
-版本：1.4
+版本：1.5
 状态：唯一权威设计文档
-适用交付：v4 Evidence Engine CLI、LCnd v0.3.0 Ubuntu Network Core、LCnd v0.4.0 应用级私有出站合同
+适用交付：v4 Evidence Engine CLI、LCnd v0.3.0 Ubuntu Network Core、v0.4.0 应用级私有出站合同、v0.5.0 Ubuntu真实检测
 
 ## 1. 项目使命
 
@@ -26,6 +26,10 @@ simulation-only 工作流，不执行 sudo、systemd、服务安装或生产路�
 v0.4.0 在相同 simulation-only 核心上增加应用级私有出站服务、LCapi 消费、分层 probe、保护目标
 与单域回滚合同。它只执行严格验证和离线文件生成；合同见
 [RFC 0004](RFC/0004-lcnd-continuity-b-contract.md)。
+
+v0.5.0 新增独立显式 `cnd-network diagnose` 真实只读观察入口；其输入/报告不复用synthetic
+合同。它只对配置目标执行有界HTTPS HEAD分层检查，读取本机Linux状态，不改变任何宿主网络或服务。
+评分仅描述指定目标/路径，私有报告不会成为生产授权；合同见 [RFC 0005](RFC/0005-ubuntu-live-health.md)。
 
 ## 2. 规范性原则
 
@@ -148,10 +152,11 @@ cnd validate（两份冒烟 ZIP）
 - **独立运维工具**：显式 v2rayN TUN 修复、撤销和有界网络路径测速；不得改变 Evidence Engine 合同。
 - **LCnd v0.3.0 Ubuntu Network Core（v0.4.0 基础）**：双向确定性规划、受保护 sing-box 1.13.12 candidate、
   合成执行和合成健康报告；不包含真实节点或生产执行。
-- **LCnd v0.4.0 应用级私有出站合同（当前）**：稳定 direct/中国/全球 route identity、私有 endpoint、
+- **LCnd v0.4.0 应用级私有出站合同（基础能力）**：稳定 direct/中国/全球 route identity、私有 endpoint、
   命名鉴权、LCapi attachment、分层 synthetic probe、保护 guard 与单域 rollback decision；不包含
   LCSP/LCapi 接入或生产验收。
-- **Ubuntu 后续切片**：只读链路探测、LCSP 基础设施适配器、受审批的真实节点与可回滚执行；
+- **LCnd v0.5.0（当前）**：Ubuntu24.04只读主机观察、真实分层HTTPS探测与健康报告；明确指定的已有代理可对比。
+- **Ubuntu 后续切片**：带宽测速/逐跳扩展、LCSP 基础设施适配器、受审批的真实节点与可回滚执行；
   必须分别设计和验收，不得从 simulation-only 隐式升级。
 - **v4.1**：原生 Windows API Collector、签名侧车文件、可配置隐私策略。
 - **v4.2**：GUI；GUI 只能编排相同 Collector 合同，不复制采集逻辑。

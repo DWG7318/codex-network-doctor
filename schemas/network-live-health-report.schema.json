@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LCnd live target/path health report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "tool_version": {
+      "type": "string"
+    },
+    "evidence_mode": {
+      "const": "live"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope": {
+      "const": "selected_targets_and_explicit_paths"
+    },
+    "sensitive": {
+      "const": true
+    },
+    "host": {
+      "$ref": "#/$defs/host"
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sample"
+      }
+    },
+    "assessment": {
+      "$ref": "#/$defs/assessment"
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/path"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "tool_version",
+    "evidence_mode",
+    "started_at",
+    "finished_at",
+    "scope",
+    "sensitive",
+    "host",
+    "samples",
+    "assessment",
+    "paths",
+    "limitations"
+  ],
+  "$defs": {
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "blocked",
+            "not_observed",
+            "not_applicable"
+          ]
+        },
+        "code": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status",
+        "duration_ms"
+      ]
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "healthy",
+            "degraded",
+            "unhealthy",
+            "insufficient_evidence"
+          ]
+        },
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "expected_samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed_samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed_checks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required_checks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "status",
+        "score",
+        "expected_samples",
+        "completed_samples",
+        "passed_checks",
+        "required_checks",
+        "codes"
+      ]
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "string"
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "partial",
+            "unsupported"
+          ]
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "up": {
+                "type": "boolean"
+              },
+              "loopback": {
+                "type": "boolean"
+              },
+              "mtu": {
+                "type": "integer"
+              },
+              "addresses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name",
+              "up",
+              "loopback",
+              "mtu",
+              "addresses"
+            ]
+          }
+        },
+        "nameservers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ipv4_routes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ipv6_routes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "platform",
+        "supported",
+        "status",
+        "interfaces",
+        "nameservers",
+        "ipv4_routes",
+        "ipv6_routes",
+        "codes"
+      ]
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"
+        },
+        "route_id": {
+          "enum": [
+            "direct",
+            "lcnd-egress-cn",
+            "lcnd-egress-global"
+          ]
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "dns": {
+          "$ref": "#/$defs/phase"
+        },
+        "tcp": {
+          "$ref": "#/$defs/phase"
+        },
+        "tls": {
+          "$ref": "#/$defs/phase"
+        },
+        "http": {
+          "$ref": "#/$defs/phase"
+        },
+        "tcp_scope": {
+          "enum": [
+            "target",
+            "proxy_endpoint"
+          ]
+        },
+        "http_status": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "total_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "target_id",
+        "route_id",
+        "attempt",
+        "complete",
+        "dns",
+        "tcp",
+        "tls",
+        "http",
+        "tcp_scope",
+        "total_ms"
+      ]
+    },
+    "path": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"
+        },
+        "route_id": {
+          "enum": [
+            "direct",
+            "lcnd-egress-cn",
+            "lcnd-egress-global"
+          ]
+        },
+        "http_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "median_success_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "assessment": {
+          "$ref": "#/$defs/assessment"
+        }
+      },
+      "required": [
+        "target_id",
+        "route_id",
+        "http_passed",
+        "median_success_ms",
+        "assessment"
+      ]
+    }
+  }
+}

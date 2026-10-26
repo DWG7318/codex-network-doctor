@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.0 — 2026-10-27
+
+- 新增显式 `cnd-network diagnose`：Ubuntu 24.04 amd64 本机只读观察及真实 DNS/TCP/TLS/HTTPS HEAD 检测。
+- 支持 direct 与明确指定的已有私网 HTTP/SOCKS5 代理串行对比；不继承环境代理、不回退线路、不跟随重定向、不下载正文。
+- 输出独立 `evidence_mode=live` JSON 和中文健康报告，提供分路径成功率、分层错误、耗时与可解释评分；缺失/取消证据不给健康结论。
+- 采样、请求、响应头与主机文件读取有硬上限；报告0600独占新建，错误不回显URL、凭据或原始错误。
+- 原 Windows 被动采集/修复/撤销/测速、旧 synthetic continuity 合同保持兼容。
+- 本版不包含生产部署、LCSP/LCapi对接、节点秘密导入、自动修复、持续监测或Ubuntu吞吐测速。
+
 ## v0.4.0 — 2026-08-13
 
 - 新增应用级私有出站服务计划、secret reference、分层 probe、保护目标、rollback receipt 与 LCapi application attachment 严格合同。

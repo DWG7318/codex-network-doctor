@@ -8,10 +8,10 @@
 公开合同、离线 validator/evaluator 与合成样例；仓库实现完成不等于 LCSP 接入完成，不等于 LCapi
 接入完成，也不等于生产验收完成。
 
-1. **[probe] Ubuntu 24.04 只读链路健康检测**
-   - 分层采集接口、DNS、路由、TCP/TLS/HTTP 和目标吞吐证据。
-   - 输出真实 evidence mode 与评分依据，但不自动修复。
-   - 与现有 Windows Evidence ZIP 和主动测速合同保持隔离。
+1. **[probe] Ubuntu 24.04 真实健康检测：v0.5.0完成首个只读切片**
+   - 已实现接口、DNS/路由快照、真实DNS/TCP/TLS/HTTPS HEAD、显式已有代理对比、live报告与可解释评分。
+   - 不自动修复，与Windows Evidence ZIP和主动测速合同隔离。
+   - 后续仍需独立吞吐测速、长期趋势、policy-routing/逐跳证据扩展；本版不测带宽。
 
 2. **[integration] LCSP 基础设施执行适配器**
    - LCnd 保持网络策略、计划、验证和回滚合同所有权。
